@@ -1618,17 +1618,66 @@ function runCarromPhysicsLoop() {
 }
 
 function checkCarromWinCondition() {
+    if (!carromState.gameActive) return;
+
     if (carromState.playerScore >= carromState.targetScore) {
         carromState.gameActive = false;
         showToast('🎉 Carrom Victory! Reached Target Score!');
         setTimeout(() => completeBattleResult(true), 1200);
+    } else if (carromState.botScore >= carromState.targetScore) {
+        carromState.gameActive = false;
+        showToast('💔 Defeat! Bot pocketed target score!');
+        setTimeout(() => completeBattleResult(false), 1200);
     } else if (carromState.pieces.filter(p => p.type === 'white' || p.type === 'red').length === 0) {
         carromState.gameActive = false;
         completeBattleResult(carromState.playerScore > carromState.botScore);
     } else {
         resetStrikerPosition();
         drawCarromFrame();
+
+        // If player shot was completed and no piece was pocketed on player turn, trigger Bot turn
+        if (carromState.isPlayerTurn && !carromState.lastTurnScored) {
+            triggerCarromBotShot();
+        } else {
+            carromState.isPlayerTurn = true;
+            const turnEl = document.getElementById('carrom-turn-status');
+            if (turnEl) {
+                turnEl.textContent = 'Your Turn (White Pieces)';
+                turnEl.style.color = 'var(--accent-magenta)';
+            }
+        }
     }
+}
+
+function triggerCarromBotShot() {
+    if (!carromState.gameActive || carromState.striker.isMoving) return;
+
+    carromState.isPlayerTurn = false;
+    const turnEl = document.getElementById('carrom-turn-status');
+    if (turnEl) {
+        turnEl.textContent = '🤖 Bot Thinking & Aiming...';
+        turnEl.style.color = 'var(--warning-yellow)';
+    }
+
+    setTimeout(() => {
+        if (!carromState.gameActive) return;
+
+        const targetPieces = carromState.pieces.filter(p => p.type === 'black' || p.type === 'red');
+        const target = targetPieces.length > 0 ? targetPieces[Math.floor(Math.random() * targetPieces.length)] : carromState.pieces[0];
+
+        if (target) {
+            const angle = Math.atan2(target.y - carromState.striker.y, target.x - carromState.striker.x);
+            carromState.aimAngle = angle;
+            const power = Math.floor(11 + Math.random() * 8);
+
+            carromState.striker.vx = Math.cos(angle) * power;
+            carromState.striker.vy = Math.sin(angle) * power;
+            carromState.striker.isMoving = true;
+
+            audio.playClick();
+            runCarromPhysicsLoop();
+        }
+    }, 1000);
 }
 
 function startSpinBattleGame() {
