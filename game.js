@@ -395,13 +395,17 @@ function setupEventListeners() {
 
 // Interface Views Navigation
 function showMainInterface() {
-    document.getElementById('main-app-header').style.display = 'flex';
-    document.getElementById('main-bottom-nav').style.display = 'flex';
+    const header = document.getElementById('main-app-header');
+    const nav = document.getElementById('main-bottom-nav');
+    if (header) header.style.display = 'flex';
+    if (nav) nav.style.display = 'flex';
 }
 
 function showAuthView(screenId) {
-    document.getElementById('main-app-header').style.display = 'none';
-    document.getElementById('main-bottom-nav').style.display = 'none';
+    const header = document.getElementById('main-app-header');
+    const nav = document.getElementById('main-bottom-nav');
+    if (header) header.style.display = 'none';
+    if (nav) nav.style.display = 'none';
     
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const target = document.getElementById(screenId);
@@ -436,6 +440,7 @@ function handleLogout() {
 
 function navigateToTab(screenId) {
     audio.playClick();
+    showMainInterface();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const target = document.getElementById(screenId);
     if (target) target.classList.add('active');
