@@ -257,7 +257,13 @@
             <div class="admin-card" style="max-width: 650px;">
                 <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;">⚔️ Game Arena & Reward Economy Controls</h3>
                 <form onsubmit="saveAppControls(event)">
-                    <h4 style="font-size: 14px; font-weight: 800; color: var(--accent-magenta); margin-bottom: 12px;">Carrom Battle</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="font-size: 14px; font-weight: 800; color: var(--accent-magenta); margin: 0;">Carrom Battle</h4>
+                        <select id="ctrl-carrom-status" class="admin-input" style="width: auto; padding: 4px 10px; font-size: 12px;">
+                            <option value="active">🟢 Active (Visible to Users)</option>
+                            <option value="disabled">🔴 Disabled (Hidden from Users)</option>
+                        </select>
+                    </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                         <div class="admin-form-group">
                             <label class="admin-label">Entry Fee (Coins)</label>
@@ -269,7 +275,13 @@
                         </div>
                     </div>
 
-                    <h4 style="font-size: 14px; font-weight: 800; color: #ff9f43; margin-bottom: 12px;">Tic-Tac-Toe (Tik Tak) Arena</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="font-size: 14px; font-weight: 800; color: #ff9f43; margin: 0;">Tic-Tac-Toe (Tik Tak) Arena</h4>
+                        <select id="ctrl-ttt-status" class="admin-input" style="width: auto; padding: 4px 10px; font-size: 12px;">
+                            <option value="active">🟢 Active (Visible to Users)</option>
+                            <option value="disabled">🔴 Disabled (Hidden from Users)</option>
+                        </select>
+                    </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                         <div class="admin-form-group">
                             <label class="admin-label">Entry Fee (Coins)</label>
@@ -281,7 +293,13 @@
                         </div>
                     </div>
 
-                    <h4 style="font-size: 14px; font-weight: 800; color: #00d2d3; margin-bottom: 12px;">Color Guess Arena</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="font-size: 14px; font-weight: 800; color: #00d2d3; margin: 0;">Color Guess Arena</h4>
+                        <select id="ctrl-color-status" class="admin-input" style="width: auto; padding: 4px 10px; font-size: 12px;">
+                            <option value="active">🟢 Active (Visible to Users)</option>
+                            <option value="disabled">🔴 Disabled (Hidden from Users)</option>
+                        </select>
+                    </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                         <div class="admin-form-group">
                             <label class="admin-label">Entry Fee (Coins)</label>
@@ -293,7 +311,13 @@
                         </div>
                     </div>
 
-                    <h4 style="font-size: 14px; font-weight: 800; color: var(--danger-red); margin-bottom: 12px;">Lucky Spin Battle</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="font-size: 14px; font-weight: 800; color: var(--danger-red); margin: 0;">Lucky Spin Battle</h4>
+                        <select id="ctrl-spin-status" class="admin-input" style="width: auto; padding: 4px 10px; font-size: 12px;">
+                            <option value="active">🟢 Active (Visible to Users)</option>
+                            <option value="disabled">🔴 Disabled (Hidden from Users)</option>
+                        </select>
+                    </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                         <div class="admin-form-group">
                             <label class="admin-label">Entry Fee (Coins)</label>

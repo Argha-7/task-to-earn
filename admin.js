@@ -530,12 +530,20 @@ function saveAppControls(e) {
     const settings = {
         carromFee: parseInt(document.getElementById('ctrl-carrom-fee').value, 10) || 20,
         carromWin: parseInt(document.getElementById('ctrl-carrom-win').value, 10) || 50,
+        carromStatus: document.getElementById('ctrl-carrom-status').value || 'active',
+        
         tttFee: parseInt(document.getElementById('ctrl-ttt-fee').value, 10) || 10,
         tttWin: parseInt(document.getElementById('ctrl-ttt-win').value, 10) || 25,
+        tttStatus: document.getElementById('ctrl-ttt-status').value || 'active',
+
         colorFee: parseInt(document.getElementById('ctrl-color-fee').value, 10) || 15,
         colorWin: parseInt(document.getElementById('ctrl-color-win').value, 10) || 35,
+        colorStatus: document.getElementById('ctrl-color-status').value || 'active',
+
         spinFee: parseInt(document.getElementById('ctrl-spin-fee').value, 10) || 25,
         spinWin: parseInt(document.getElementById('ctrl-spin-win').value, 10) || 60,
+        spinStatus: document.getElementById('ctrl-spin-status').value || 'active',
+
         missionReward: parseInt(document.getElementById('ctrl-mission-reward').value, 10) || 20,
         dailyReward: parseInt(document.getElementById('ctrl-daily-reward').value, 10) || 20,
         minWithdraw: parseInt(document.getElementById('ctrl-min-withdraw').value, 10) || 100
@@ -545,7 +553,7 @@ function saveAppControls(e) {
         db.ref('app_settings').set(settings);
     }
     localStorage.setItem('todoearn_app_settings', JSON.stringify(settings));
-    alert('⚔️ Game Arena & Reward Economy settings saved successfully!');
+    alert('⚔️ Game Arena & Active/Disabled settings saved successfully!');
 }
 
 function loadAppControls() {
@@ -553,12 +561,20 @@ function loadAppControls() {
         if (!settings) return;
         if (document.getElementById('ctrl-carrom-fee')) document.getElementById('ctrl-carrom-fee').value = settings.carromFee || 20;
         if (document.getElementById('ctrl-carrom-win')) document.getElementById('ctrl-carrom-win').value = settings.carromWin || 50;
+        if (document.getElementById('ctrl-carrom-status')) document.getElementById('ctrl-carrom-status').value = settings.carromStatus || 'active';
+
         if (document.getElementById('ctrl-ttt-fee')) document.getElementById('ctrl-ttt-fee').value = settings.tttFee || 10;
         if (document.getElementById('ctrl-ttt-win')) document.getElementById('ctrl-ttt-win').value = settings.tttWin || 25;
+        if (document.getElementById('ctrl-ttt-status')) document.getElementById('ctrl-ttt-status').value = settings.tttStatus || 'active';
+
         if (document.getElementById('ctrl-color-fee')) document.getElementById('ctrl-color-fee').value = settings.colorFee || 15;
         if (document.getElementById('ctrl-color-win')) document.getElementById('ctrl-color-win').value = settings.colorWin || 35;
+        if (document.getElementById('ctrl-color-status')) document.getElementById('ctrl-color-status').value = settings.colorStatus || 'active';
+
         if (document.getElementById('ctrl-spin-fee')) document.getElementById('ctrl-spin-fee').value = settings.spinFee || 25;
         if (document.getElementById('ctrl-spin-win')) document.getElementById('ctrl-spin-win').value = settings.spinWin || 60;
+        if (document.getElementById('ctrl-spin-status')) document.getElementById('ctrl-spin-status').value = settings.spinStatus || 'active';
+
         if (document.getElementById('ctrl-mission-reward')) document.getElementById('ctrl-mission-reward').value = settings.missionReward || 20;
         if (document.getElementById('ctrl-daily-reward')) document.getElementById('ctrl-daily-reward').value = settings.dailyReward || 20;
         if (document.getElementById('ctrl-min-withdraw')) document.getElementById('ctrl-min-withdraw').value = settings.minWithdraw || 100;

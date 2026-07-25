@@ -185,6 +185,64 @@ function setupStorageSyncListener() {
             handleNotifUpdate(userNotifs);
         });
     }
+
+    listenAppSettings();
+}
+
+function listenAppSettings() {
+    const applySettings = (settings) => {
+        if (!settings) return;
+
+        // 1. Carrom Status & Entry/Win
+        const carromCard = document.getElementById('card-battle-carrom');
+        if (carromCard) {
+            carromCard.style.display = settings.carromStatus === 'disabled' ? 'none' : 'flex';
+            if (settings.carromFee && settings.carromWin) {
+                document.getElementById('desc-battle-carrom').textContent = `Entry: ${settings.carromFee} Coins | Win: ${settings.carromWin} Coins`;
+                carromCard.setAttribute('onclick', `startBattle('carrom', ${settings.carromFee}, ${settings.carromWin})`);
+            }
+        }
+
+        // 2. Tic Tac Toe Status & Entry/Win
+        const tttCard = document.getElementById('card-battle-tictactoe');
+        if (tttCard) {
+            tttCard.style.display = settings.tttStatus === 'disabled' ? 'none' : 'flex';
+            if (settings.tttFee && settings.tttWin) {
+                document.getElementById('desc-battle-tictactoe').textContent = `Entry: ${settings.tttFee} Coins | Win: ${settings.tttWin} Coins`;
+                tttCard.setAttribute('onclick', `startBattle('tictactoe', ${settings.tttFee}, ${settings.tttWin})`);
+            }
+        }
+
+        // 3. Color Status & Entry/Win
+        const colorCard = document.getElementById('card-battle-color');
+        if (colorCard) {
+            colorCard.style.display = settings.colorStatus === 'disabled' ? 'none' : 'flex';
+            if (settings.colorFee && settings.colorWin) {
+                document.getElementById('desc-battle-color').textContent = `Entry: ${settings.colorFee} Coins | Win: ${settings.colorWin} Coins`;
+                colorCard.setAttribute('onclick', `startBattle('color', ${settings.colorFee}, ${settings.colorWin})`);
+            }
+        }
+
+        // 4. Spin Status & Entry/Win
+        const spinCard = document.getElementById('card-battle-spin');
+        if (spinCard) {
+            spinCard.style.display = settings.spinStatus === 'disabled' ? 'none' : 'flex';
+            if (settings.spinFee && settings.spinWin) {
+                document.getElementById('desc-battle-spin').textContent = `Entry: ${settings.spinFee} Coins | Win: ${settings.spinWin} Coins`;
+                spinCard.setAttribute('onclick', `startBattle('spin', ${settings.spinFee}, ${settings.spinWin})`);
+            }
+        }
+    };
+
+    if (typeof DatabaseAPI !== 'undefined' && db) {
+        db.ref('app_settings').on('value', (snapshot) => {
+            const val = snapshot.val();
+            if (val) applySettings(val);
+        });
+    } else {
+        const saved = localStorage.getItem('todoearn_app_settings');
+        if (saved) applySettings(JSON.parse(saved));
+    }
 }
 
 function showNotificationModal(title, msg) {
@@ -1071,25 +1129,7 @@ function updateCarromPhysics() {
                 if (carromScore >= 3) {
                     // Win Match!
                     setTimeout(() => {
-                        audio.playWin();
-                        AppState.coins += 50;
-                        AppState.totalEarned += 50;
-                        addHistoryItem('Carrom Victory Reward', '+50', true);
-                        saveStateToStorage();
-
-                        if (typeof DatabaseAPI !== 'undefined') {
-                            DatabaseAPI.logTaskCompletion({
-                                user: AppState.user ? AppState.user.name : 'User',
-                                email: AppState.user ? AppState.user.email : 'user@app.com',
-                                taskTitle: 'Carrom Battle Match Win',
-                                reward: 50,
-                                date: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
-                                status: 'Match Won (Score 3/3)'
-                            });
-                        }
-
-                        showToast('🎉 Victory! +50 Coins Won!');
-                        navigateToTab('home-screen');
+                        completeBattleResult(true);
                     }, 500);
                 }
             }
@@ -1417,19 +1457,39 @@ function checkTTTWin(player) {
 }
 
 function startCarromBattleGame() {
-    showToast('⚔️ Carrom Battle Match Started!');
-    setTimeout(() => {
-        const win = Math.random() > 0.35; // 65% win rate for engaging gameplay
-        completeBattleResult(win);
-    }, 2000);
+    audio.playClick();
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('carrom-game-screen').classList.add('active');
+    initCarromBoard();
 }
 
 function startSpinBattleGame() {
-    showToast('⚔️ Lucky Spin Battle Wheel Spinning!');
+    audio.playClick();
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('spin-game-screen').classList.add('active');
+}
+
+function spinLuckyWheel() {
+    const wheel = document.getElementById('spin-wheel-circle');
+    const btn = document.getElementById('btn-spin-wheel');
+    if (!wheel || (btn && btn.disabled)) return;
+
+    audio.playClick();
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Spinning...';
+    }
+
+    const randomDegrees = 1440 + Math.floor(Math.random() * 360);
+    wheel.style.transform = `rotate(${randomDegrees}deg)`;
+
     setTimeout(() => {
-        const win = Math.random() > 0.4;
-        completeBattleResult(win);
-    }, 2000);
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'SPIN AGAIN';
+        }
+        completeBattleResult(true);
+    }, 4200);
 }
 
 function claim3BattlesMission() {
