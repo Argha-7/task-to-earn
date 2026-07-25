@@ -53,8 +53,8 @@
 - **Flexbox Layout Rules (`#app-container`):**
   - Container is a vertical flexbox (`height: 100vh; overflow: hidden; display: flex; flex-direction: column;`).
   - Screens have `flex: 1; overflow-y: auto; padding-bottom: 85px;`.
-  - Nav Bar has `position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 1000;`.
-  - Modals have `position: fixed; inset: 0; z-index: 2000;`.
+  - Nav Bar has `position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); max-width: 480px; width: 100%; z-index: 9999;`.
+  - Modals have `position: fixed; inset: 0; z-index: 10000;`.
 
 ### 2.6. Admin Panel Controls (`admin.html`)
 - **Task Management:** Create, edit, delete dynamic tasks with custom links and coin rewards.
@@ -72,8 +72,8 @@ When adding new features or modifying code, always verify:
 2. **Z-Index Layering:**
    - Base UI / Screens: `z-index: 1`
    - Headers: `z-index: 100`
-   - Bottom Nav Bar: `z-index: 1000`
-   - Modals / Popups: `z-index: 2000`
+   - Bottom Nav Bar: `z-index: 9999`
+   - Modals / Popups: `z-index: 10000`
 3. **Real-time Sync:** Ensure all state changes update both `AppState`, `localStorage`, and Firebase Database via `DatabaseAPI`.
 
 ---
