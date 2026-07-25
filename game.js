@@ -119,15 +119,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initTelegramUser();
     setupEventListeners();
     setupStorageSyncListener();
+
+    // Ensure main interface header & bottom navigation bar are always visible
+    showMainInterface();
     renderAllViews();
 
-    // Keep main header & nav bar hidden during splash loading animation
-    const header = document.getElementById('main-app-header');
-    const nav = document.getElementById('main-bottom-nav');
-    if (header) header.style.display = 'none';
-    if (nav) nav.style.display = 'none';
-
-    // Splash Screen Transition (1.5 seconds)
+    // Splash Screen Transition
     setTimeout(() => {
         const splash = document.getElementById('splash-screen');
         if (splash) splash.classList.remove('active');
