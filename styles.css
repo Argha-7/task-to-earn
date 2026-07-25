@@ -1247,3 +1247,32 @@ body {
     color: var(--text-muted);
 }
 
+/* Tic Tac Toe Grid Styles */
+.ttt-cell {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    font-size: 32px;
+    font-weight: 900;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.ttt-cell:active {
+    transform: scale(0.95);
+}
+
+.ttt-cell.x-mark {
+    color: var(--accent-magenta);
+}
+
+.ttt-cell.o-mark {
+    color: #1b84ff;
+}
+

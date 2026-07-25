@@ -251,6 +251,20 @@
                     </div>
                 </div>
 
+                <!-- Tic-Tac-Toe (Tik Tak) Battle Card -->
+                <div class="task-card" onclick="startBattle('tictactoe', 10, 25)">
+                    <div class="task-icon-box icon-teal" style="background: rgba(255,159,67,0.2); color: #ff9f43;">
+                        <i class="fa-solid fa-hashtag"></i>
+                    </div>
+                    <div class="task-info">
+                        <div class="task-name">Tic-Tac-Toe (Tik Tak)</div>
+                        <div class="task-desc">Entry: 10 Coins | Win: 25 Coins</div>
+                    </div>
+                    <div class="task-reward-tag" style="background: rgba(255,159,67,0.15); color: #ff9f43;">
+                        Play Battle <i class="fa-solid fa-gamepad"></i>
+                    </div>
+                </div>
+
                 <!-- Color Game Battle Card -->
                 <div class="task-card" onclick="startBattle('color', 15, 35)">
                     <div class="task-icon-box icon-teal">
@@ -428,7 +442,11 @@
                 </button>
             </div>
 
-            <button class="btn" style="background: rgba(255,61,113,0.15); color: var(--danger-red); border: 1px solid rgba(255,61,113,0.35); margin-top: 20px;" onclick="handleLogout()">
+            <button class="btn" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; margin-top: 14px;" onclick="navigateToTab('history-screen')">
+                <i class="fa-solid fa-clock-rotate-left"></i> View Transaction History
+            </button>
+
+            <button class="btn" style="background: rgba(255,61,113,0.15); color: var(--danger-red); border: 1px solid rgba(255,61,113,0.35); margin-top: 10px;" onclick="handleLogout()">
                 <i class="fa-solid fa-right-from-bracket"></i> Logout
             </button>
         </div>
@@ -479,6 +497,34 @@
                 <div style="margin-top:14px; width:100%; text-align:center;">
                     <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Drag Striker to Aim & Release to Shoot!</div>
                     <button class="btn btn-primary" id="btn-carrom-reset" onclick="initCarromBoard()">Reset Board</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             10.5. TIC-TAC-TOE (TIK TAK) MINI-GAME SCREEN
+             ========================================== -->
+        <div id="tictactoe-game-screen" class="screen">
+            <div class="subpage-top-bar">
+                <button class="btn-back" onclick="navigateToTab('battle-screen')"><i class="fa-solid fa-arrow-left"></i> Exit Battle</button>
+            </div>
+
+            <div class="daily-reward-card" style="text-align: center; margin-top: 10px;">
+                <h2 style="font-size: 20px; font-weight: 900; margin-bottom: 4px;">⚔️ Tic-Tac-Toe (Tik Tak)</h2>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Get 3 in a row (X) to win 25 Coins!</p>
+
+                <div id="ttt-status" style="font-size: 14px; font-weight: 800; color: var(--warning-yellow); margin-bottom: 16px;">Your Turn (X)</div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 270px; margin: 0 auto 20px auto;">
+                    <button class="ttt-cell" onclick="makeTTTMove(0)"></button>
+                    <button class="ttt-cell" onclick="makeTTTMove(1)"></button>
+                    <button class="ttt-cell" onclick="makeTTTMove(2)"></button>
+                    <button class="ttt-cell" onclick="makeTTTMove(3)"></button>
+                    <button class="ttt-cell" onclick="makeTTTMove(4)"></button>
+                    <button class="ttt-cell" onclick="makeTTTMove(5)"></button>
+                    <button class="ttt-cell" onclick="makeTTTMove(6)"></button>
+                    <button class="ttt-cell" onclick="makeTTTMove(7)"></button>
+                    <button class="ttt-cell" onclick="makeTTTMove(8)"></button>
                 </div>
             </div>
         </div>
@@ -548,10 +594,6 @@
              11. BOTTOM NAVIGATION BAR
              ========================================== -->
         <div class="bottom-nav-bar" id="main-bottom-nav" style="display: none;">
-            <div class="nav-item" id="nav-refer" onclick="navigateToTab('refer-screen')">
-                <i class="fa-solid fa-user-group"></i>
-                <span class="nav-dot"></span>
-            </div>
             <div class="nav-item" id="nav-battle" onclick="navigateToTab('battle-screen')">
                 <i class="fa-solid fa-gamepad"></i>
                 <span class="nav-dot"></span>
@@ -564,8 +606,8 @@
                 <i class="fa-solid fa-house"></i>
                 <span class="nav-dot"></span>
             </div>
-            <div class="nav-item" id="nav-history" onclick="navigateToTab('history-screen')">
-                <i class="fa-solid fa-clock-rotate-left"></i>
+            <div class="nav-item" id="nav-refer" onclick="navigateToTab('refer-screen')">
+                <i class="fa-solid fa-user-group"></i>
                 <span class="nav-dot"></span>
             </div>
             <div class="nav-item" id="nav-profile" onclick="navigateToTab('profile-screen')">

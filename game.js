@@ -1213,6 +1213,8 @@ function startBattle(gameType, entryFee, winReward) {
         startCarromBattleGame();
     } else if (gameType === 'spin') {
         startSpinBattleGame();
+    } else if (gameType === 'tictactoe') {
+        startTicTacToeBattleGame();
     }
 }
 
@@ -1245,6 +1247,80 @@ function completeBattleResult(won) {
 
     renderAllViews();
     navigateToTab('battle-screen');
+}
+
+// Tic-Tac-Toe Interactive Battle Logic
+let tttBoard = ['', '', '', '', '', '', '', '', ''];
+let tttGameActive = true;
+
+function startTicTacToeBattleGame() {
+    audio.playClick();
+    tttBoard = ['', '', '', '', '', '', '', '', ''];
+    tttGameActive = true;
+    
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('tictactoe-game-screen').classList.add('active');
+
+    const status = document.getElementById('ttt-status');
+    if (status) status.textContent = 'Your Turn (X)';
+
+    document.querySelectorAll('.ttt-cell').forEach(cell => {
+        cell.textContent = '';
+        cell.className = 'ttt-cell';
+    });
+}
+
+function makeTTTMove(index) {
+    if (!tttGameActive || tttBoard[index] !== '') return;
+
+    audio.playClick();
+    tttBoard[index] = 'X';
+    const cells = document.querySelectorAll('.ttt-cell');
+    cells[index].textContent = 'X';
+    cells[index].classList.add('x-mark');
+
+    if (checkTTTWin('X')) {
+        tttGameActive = false;
+        document.getElementById('ttt-status').textContent = '🎉 You Won!';
+        setTimeout(() => completeBattleResult(true), 1200);
+        return;
+    }
+
+    if (!tttBoard.includes('')) {
+        tttGameActive = false;
+        document.getElementById('ttt-status').textContent = 'Draw Game!';
+        setTimeout(() => completeBattleResult(false), 1200);
+        return;
+    }
+
+    document.getElementById('ttt-status').textContent = 'Bot Thinking... (O)';
+    setTimeout(() => {
+        if (!tttGameActive) return;
+        const emptyIndices = tttBoard.map((val, idx) => val === '' ? idx : null).filter(val => val !== null);
+        if (emptyIndices.length > 0) {
+            const botChoice = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+            tttBoard[botChoice] = 'O';
+            cells[botChoice].textContent = 'O';
+            cells[botChoice].classList.add('o-mark');
+
+            if (checkTTTWin('O')) {
+                tttGameActive = false;
+                document.getElementById('ttt-status').textContent = 'Bot Won!';
+                setTimeout(() => completeBattleResult(false), 1200);
+                return;
+            }
+            document.getElementById('ttt-status').textContent = 'Your Turn (X)';
+        }
+    }, 600);
+}
+
+function checkTTTWin(player) {
+    const winCombos = [
+        [0,1,2], [3,4,5], [6,7,8],
+        [0,3,6], [1,4,7], [2,5,8],
+        [0,4,8], [2,4,6]
+    ];
+    return winCombos.some(combo => combo.every(idx => tttBoard[idx] === player));
 }
 
 function startCarromBattleGame() {
