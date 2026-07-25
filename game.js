@@ -1349,18 +1349,23 @@ function closeVictoryModal() {
     navigateToTab('battle-screen');
 }
 
-// Interactive Carrom Board Mini-Game Engine
+// Interactive Carrom Board Mini-Game Engine (Real 2D Physics)
 let carromState = {
     userScore: 0,
     oppScore: 0,
+    isUserTurn: true,
+    isShooting: false,
     pucks: [],
-    striker: { x: 150, y: 250, radius: 12, vx: 0, vy: 0 }
+    striker: { x: 150, y: 250, radius: 13, vx: 0, vy: 0 },
+    dragAim: { isDragging: false, startX: 0, startY: 0, currX: 0, currY: 0 }
 };
 
 function startCarromBattleGame() {
     audio.playClick();
     carromState.userScore = 0;
     carromState.oppScore = 0;
+    carromState.isUserTurn = true;
+    carromState.isShooting = false;
     
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const carromScreen = document.getElementById('carrom-game-screen');
@@ -1371,6 +1376,12 @@ function startCarromBattleGame() {
     if (uScore) uScore.textContent = '0';
     if (oScore) oScore.textContent = '0';
 
+    const turnInd = document.getElementById('carrom-turn-indicator');
+    if (turnInd) {
+        turnInd.textContent = 'YOUR TURN';
+        turnInd.style.color = '#00d2d3';
+    }
+
     initCarromBoard();
 }
 
@@ -1379,16 +1390,30 @@ function initCarromBoard() {
     if (!canvas) return;
     
     carromState.pucks = [
-        { x: 150, y: 150, radius: 10, color: '#ff3d71', pts: 30, type: 'queen', pocketed: false },
-        { x: 135, y: 140, radius: 9, color: '#ffffff', pts: 10, type: 'white', pocketed: false },
-        { x: 165, y: 140, radius: 9, color: '#ffffff', pts: 10, type: 'white', pocketed: false },
-        { x: 135, y: 160, radius: 9, color: '#111122', pts: 5, type: 'black', pocketed: false },
-        { x: 165, y: 160, radius: 9, color: '#111122', pts: 5, type: 'black', pocketed: false },
-        { x: 150, y: 130, radius: 9, color: '#ffffff', pts: 10, type: 'white', pocketed: false },
-        { x: 150, y: 170, radius: 9, color: '#111122', pts: 5, type: 'black', pocketed: false }
+        { x: 150, y: 150, radius: 10, color: '#ff3d71', pts: 30, type: 'queen', vx: 0, vy: 0, pocketed: false },
+        { x: 132, y: 138, radius: 9, color: '#ffffff', pts: 10, type: 'white', vx: 0, vy: 0, pocketed: false },
+        { x: 168, y: 138, radius: 9, color: '#ffffff', pts: 10, type: 'white', vx: 0, vy: 0, pocketed: false },
+        { x: 132, y: 162, radius: 9, color: '#111122', pts: 5, type: 'black', vx: 0, vy: 0, pocketed: false },
+        { x: 168, y: 162, radius: 9, color: '#111122', pts: 5, type: 'black', vx: 0, vy: 0, pocketed: false },
+        { x: 150, y: 125, radius: 9, color: '#ffffff', pts: 10, type: 'white', vx: 0, vy: 0, pocketed: false },
+        { x: 150, y: 175, radius: 9, color: '#111122', pts: 5, type: 'black', vx: 0, vy: 0, pocketed: false }
     ];
 
     carromState.striker = { x: 150, y: 250, radius: 13, vx: 0, vy: 0 };
+    setupCarromCanvasEvents(canvas);
+    drawCarromBoard();
+}
+
+function updateCarromStrikerPos(val) {
+    if (carromState.isShooting || !carromState.isUserTurn) return;
+    const num = parseInt(val, 10);
+    carromState.striker.x = num;
+    const posLabel = document.getElementById('carrom-pos-val');
+    if (posLabel) {
+        if (num < 100) posLabel.textContent = 'Left';
+        else if (num > 200) posLabel.textContent = 'Right';
+        else posLabel.textContent = 'Center';
+    }
     drawCarromBoard();
 }
 
@@ -1397,10 +1422,12 @@ function drawCarromBoard() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     
+    // Board Base
     ctx.fillStyle = '#e4c49f';
     ctx.fillRect(0, 0, 300, 300);
 
-    const pockets = [{x: 20, y: 20}, {x: 280, y: 20}, {x: 20, y: 280}, {x: 280, y: 280}];
+    // 4 Corner Pockets
+    const pockets = [{x: 22, y: 22}, {x: 278, y: 22}, {x: 22, y: 278}, {x: 278, y: 278}];
     ctx.fillStyle = '#111111';
     pockets.forEach(p => {
         ctx.beginPath();
@@ -1408,105 +1435,219 @@ function drawCarromBoard() {
         ctx.fill();
     });
 
+    // Center Circle & Outer Circles
     ctx.strokeStyle = '#8b4513';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(150, 150, 35, 0, Math.PI * 2);
     ctx.stroke();
 
+    // Baseline for Striker
+    ctx.strokeStyle = 'rgba(139, 69, 19, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(50, 250);
+    ctx.lineTo(250, 250);
+    ctx.stroke();
+
+    // Draw Pucks
     carromState.pucks.forEach(puck => {
         if (!puck.pocketed) {
             ctx.fillStyle = puck.color;
             ctx.beginPath();
             ctx.arc(puck.x, puck.y, puck.radius, 0, Math.PI * 2);
             ctx.fill();
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 1.5;
             ctx.stroke();
         }
     });
 
+    // Draw Striker
     const st = carromState.striker;
     ctx.fillStyle = '#e03bff';
     ctx.beginPath();
     ctx.arc(st.x, st.y, st.radius, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
+
+    // Draw Aim Target Line if dragging or ready
+    if (!carromState.isShooting && carromState.isUserTurn) {
+        ctx.strokeStyle = 'rgba(224, 59, 255, 0.6)';
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(st.x, st.y);
+        ctx.lineTo(st.x, st.y - 80);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
 }
 
-function strikeCarromPuck() {
+function shootCarromStriker() {
+    if (carromState.isShooting || !carromState.isUserTurn) return;
     audio.playClick();
-    const st = carromState.striker;
-    if (st.vx !== 0 || st.vy !== 0) return;
+    carromState.isShooting = true;
 
-    const angle = (Math.random() * 0.8 - 0.4) - Math.PI / 2;
-    const speed = 11 + Math.random() * 5;
+    const st = carromState.striker;
+    const angle = (Math.random() * 0.6 - 0.3) - Math.PI / 2;
+    const speed = 12 + Math.random() * 4;
     st.vx = Math.cos(angle) * speed;
     st.vy = Math.sin(angle) * speed;
 
-    runCarromPhysics();
+    runCarromPhysicsEngine();
 }
 
-function runCarromPhysics() {
-    const canvas = document.getElementById('carrom-canvas');
-    if (!canvas) return;
+function setupCarromCanvasEvents(canvas) {
+    let isDragging = false;
+    let dragStart = { x: 0, y: 0 };
 
+    canvas.onmousedown = (e) => {
+        if (carromState.isShooting || !carromState.isUserTurn) return;
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        if (Math.hypot(mouseX - carromState.striker.x, mouseY - carromState.striker.y) < 25) {
+            isDragging = true;
+            dragStart = { x: mouseX, y: mouseY };
+        }
+    };
+
+    canvas.onmouseup = (e) => {
+        if (isDragging) {
+            isDragging = false;
+            shootCarromStriker();
+        }
+    };
+
+    canvas.ontouchstart = (e) => {
+        if (carromState.isShooting || !carromState.isUserTurn || !e.touches[0]) return;
+        const rect = canvas.getBoundingClientRect();
+        const touchX = e.touches[0].clientX - rect.left;
+        const touchY = e.touches[0].clientY - rect.top;
+        if (Math.hypot(touchX - carromState.striker.x, touchY - carromState.striker.y) < 25) {
+            isDragging = true;
+        }
+    };
+
+    canvas.ontouchend = () => {
+        if (isDragging) {
+            isDragging = false;
+            shootCarromStriker();
+        }
+    };
+}
+
+function runCarromPhysicsEngine() {
     function update() {
         const st = carromState.striker;
         
+        // Move Striker & Pucks
         st.x += st.vx;
         st.y += st.vy;
-        st.vx *= 0.96;
-        st.vy *= 0.96;
+        st.vx *= 0.97;
+        st.vy *= 0.97;
 
-        if (st.x - st.radius < 10 || st.x + st.radius > 290) st.vx *= -1;
-        if (st.y - st.radius < 10 || st.y + st.radius > 290) st.vy *= -1;
+        // Bounce Striker off Board Walls
+        if (st.x - st.radius < 12 || st.x + st.radius > 288) st.vx *= -1;
+        if (st.y - st.radius < 12 || st.y + st.radius > 288) st.vy *= -1;
 
+        // Puck Physics & Collision Damping
         carromState.pucks.forEach(p => {
             if (p.pocketed) return;
+
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vx *= 0.96;
+            p.vy *= 0.96;
+
+            // Puck Wall Bounces
+            if (p.x - p.radius < 12 || p.x + p.radius > 288) p.vx *= -1;
+            if (p.y - p.radius < 12 || p.y + p.radius > 288) p.vy *= -1;
+
+            // Collision: Striker with Puck
             const dx = p.x - st.x;
             const dy = p.y - st.y;
             const dist = Math.hypot(dx, dy);
             if (dist < st.radius + p.radius) {
                 audio.playClick();
-                p.x += st.vx * 0.7;
-                p.y += st.vy * 0.7;
-                
-                const pockets = [{x: 20, y: 20}, {x: 280, y: 20}, {x: 20, y: 280}, {x: 280, y: 280}];
-                pockets.forEach(pkt => {
-                    if (Math.hypot(p.x - pkt.x, p.y - pkt.y) < 24) {
-                        p.pocketed = true;
+                p.vx += st.vx * 0.75;
+                p.vy += st.vy * 0.75;
+                st.vx *= 0.6;
+                st.vy *= 0.6;
+            }
+
+            // Pocket Check (4 Corners)
+            const pockets = [{x: 22, y: 22}, {x: 278, y: 22}, {x: 22, y: 278}, {x: 278, y: 278}];
+            pockets.forEach(pkt => {
+                if (Math.hypot(p.x - pkt.x, p.y - pkt.y) < 22) {
+                    p.pocketed = true;
+                    p.vx = 0;
+                    p.vy = 0;
+                    audio.playCoin();
+
+                    if (carromState.isUserTurn) {
                         carromState.userScore += p.pts;
-                        audio.playCoin();
                         const uVal = document.getElementById('carrom-user-score');
                         if (uVal) uVal.textContent = carromState.userScore;
+                    } else {
+                        carromState.oppScore += p.pts;
+                        const oVal = document.getElementById('carrom-opp-score');
+                        if (oVal) oVal.textContent = carromState.oppScore;
                     }
-                });
-            }
+                }
+            });
         });
 
         drawCarromBoard();
 
-        if (Math.hypot(st.vx, st.vy) > 0.2) {
+        const activeMotion = Math.hypot(st.vx, st.vy) > 0.25 || carromState.pucks.some(p => Math.hypot(p.vx, p.vy) > 0.25);
+
+        if (activeMotion) {
             requestAnimationFrame(update);
         } else {
             st.vx = 0;
             st.vy = 0;
-            st.x = 150;
+            st.x = parseInt(document.getElementById('carrom-striker-slider')?.value || '150', 10);
             st.y = 250;
+            carromState.isShooting = false;
             drawCarromBoard();
 
-            setTimeout(() => {
-                carromState.oppScore += Math.floor(Math.random() * 12);
-                const oVal = document.getElementById('carrom-opp-score');
-                if (oVal) oVal.textContent = carromState.oppScore;
+            // Check Win Condition
+            if (carromState.userScore >= 30 || carromState.oppScore >= 30 || carromState.pucks.every(p => p.pocketed)) {
+                completeBattleResult(carromState.userScore >= carromState.oppScore);
+                return;
+            }
 
-                if (carromState.userScore >= 25 || carromState.oppScore >= 25 || carromState.pucks.every(p => p.pocketed)) {
-                    completeBattleResult(carromState.userScore >= carromState.oppScore);
+            // Bot Turn Trigger
+            if (carromState.isUserTurn) {
+                carromState.isUserTurn = false;
+                const turnInd = document.getElementById('carrom-turn-indicator');
+                if (turnInd) {
+                    turnInd.textContent = "BOT'S TURN";
+                    turnInd.style.color = "#ff5252";
                 }
-            }, 500);
+
+                setTimeout(() => {
+                    const botScoreGain = Math.random() > 0.4 ? (Math.random() > 0.6 ? 10 : 5) : 0;
+                    carromState.oppScore += botScoreGain;
+                    const oVal = document.getElementById('carrom-opp-score');
+                    if (oVal) oVal.textContent = carromState.oppScore;
+
+                    carromState.isUserTurn = true;
+                    if (turnInd) {
+                        turnInd.textContent = "YOUR TURN";
+                        turnInd.style.color = "#00d2d3";
+                    }
+                    drawCarromBoard();
+
+                    if (carromState.userScore >= 30 || carromState.oppScore >= 30) {
+                        completeBattleResult(carromState.userScore >= carromState.oppScore);
+                    }
+                }, 1000);
+            }
         }
     }
 
