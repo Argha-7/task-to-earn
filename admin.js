@@ -531,12 +531,10 @@ function saveAppControls(e) {
         carromFee: parseInt(document.getElementById('ctrl-carrom-fee').value, 10) || 20,
         carromWin: parseInt(document.getElementById('ctrl-carrom-win').value, 10) || 50,
         carromStatus: document.getElementById('ctrl-carrom-status').value || 'active',
-        carromDiff: document.getElementById('ctrl-carrom-diff') ? document.getElementById('ctrl-carrom-diff').value : 'normal',
         
         tttFee: parseInt(document.getElementById('ctrl-ttt-fee').value, 10) || 10,
         tttWin: parseInt(document.getElementById('ctrl-ttt-win').value, 10) || 25,
         tttStatus: document.getElementById('ctrl-ttt-status').value || 'active',
-        tttDiff: document.getElementById('ctrl-ttt-diff') ? document.getElementById('ctrl-ttt-diff').value : 'normal',
 
         colorFee: parseInt(document.getElementById('ctrl-color-fee').value, 10) || 15,
         colorWin: parseInt(document.getElementById('ctrl-color-win').value, 10) || 35,
@@ -555,7 +553,7 @@ function saveAppControls(e) {
         db.ref('app_settings').set(settings);
     }
     localStorage.setItem('todoearn_app_settings', JSON.stringify(settings));
-    alert('⚔️ Game Arena & Difficulty settings saved successfully!');
+    alert('⚔️ Game Arena & Active/Disabled settings saved successfully!');
 }
 
 function loadAppControls() {
@@ -564,12 +562,10 @@ function loadAppControls() {
         if (document.getElementById('ctrl-carrom-fee')) document.getElementById('ctrl-carrom-fee').value = settings.carromFee || 20;
         if (document.getElementById('ctrl-carrom-win')) document.getElementById('ctrl-carrom-win').value = settings.carromWin || 50;
         if (document.getElementById('ctrl-carrom-status')) document.getElementById('ctrl-carrom-status').value = settings.carromStatus || 'active';
-        if (document.getElementById('ctrl-carrom-diff')) document.getElementById('ctrl-carrom-diff').value = settings.carromDiff || 'normal';
 
         if (document.getElementById('ctrl-ttt-fee')) document.getElementById('ctrl-ttt-fee').value = settings.tttFee || 10;
         if (document.getElementById('ctrl-ttt-win')) document.getElementById('ctrl-ttt-win').value = settings.tttWin || 25;
         if (document.getElementById('ctrl-ttt-status')) document.getElementById('ctrl-ttt-status').value = settings.tttStatus || 'active';
-        if (document.getElementById('ctrl-ttt-diff')) document.getElementById('ctrl-ttt-diff').value = settings.tttDiff || 'normal';
 
         if (document.getElementById('ctrl-color-fee')) document.getElementById('ctrl-color-fee').value = settings.colorFee || 15;
         if (document.getElementById('ctrl-color-win')) document.getElementById('ctrl-color-win').value = settings.colorWin || 35;

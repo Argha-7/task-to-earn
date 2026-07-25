@@ -252,10 +252,8 @@ function applyAppSettings(settings) {
         }
     }
     if (carromDesc && carromCard) {
-        const diffText = (settings.carromDiff || 'normal').toUpperCase();
-        carromDesc.textContent = `Entry: ${settings.carromFee || 20} Coins | Win: ${settings.carromWin || 50} Coins (${diffText})`;
+        carromDesc.textContent = `Entry: ${settings.carromFee || 20} Coins | Win: ${settings.carromWin || 50} Coins`;
         carromCard.setAttribute('onclick', `startBattle('carrom', ${settings.carromFee || 20}, ${settings.carromWin || 50})`);
-        carromState.difficulty = settings.carromDiff || 'normal';
     }
 
     // Tic-Tac-Toe Control
@@ -1978,25 +1976,10 @@ function triggerCarromBotShot() {
         const target = targetPieces.length > 0 ? targetPieces[Math.floor(Math.random() * targetPieces.length)] : carromState.pieces[0];
 
         if (target) {
-            let angle = Math.atan2(target.y - carromState.striker.y, target.x - carromState.striker.x);
-            let power = 14;
-
-            const diff = carromState.difficulty || 'normal';
-            if (diff === 'easy') {
-                // Easy: Random angle deviation ±15 deg, lower power
-                angle += (Math.random() * 0.5 - 0.25);
-                power = Math.floor(9 + Math.random() * 6);
-            } else if (diff === 'hard') {
-                // Hard: Master AI pinpoint accuracy ±1.5 deg, high power
-                angle += (Math.random() * 0.04 - 0.02);
-                power = Math.floor(16 + Math.random() * 8);
-            } else {
-                // Normal: Slight angle error ±5 deg
-                angle += (Math.random() * 0.16 - 0.08);
-                power = Math.floor(12 + Math.random() * 7);
-            }
-
+            const angle = Math.atan2(target.y - carromState.striker.y, target.x - carromState.striker.x);
             carromState.aimAngle = angle;
+            const power = Math.floor(12 + Math.random() * 8);
+
             carromState.striker.vx = Math.cos(angle) * power;
             carromState.striker.vy = Math.sin(angle) * power;
             carromState.striker.isMoving = true;
