@@ -1361,6 +1361,15 @@ function startCarromBattleGame() {
     initCarromBoard();
 }
 
+function autoScrollToCarromTurn() {
+    setTimeout(() => {
+        const turnEl = document.getElementById('carrom-turn-status');
+        if (turnEl) {
+            turnEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }, 150);
+}
+
 function initCarromBoard() {
     const canvas = document.getElementById('carromCanvas');
     if (!canvas) return;
@@ -1405,6 +1414,7 @@ function initCarromBoard() {
     resetStrikerPosition();
     setupCarromCanvasEvents();
     drawCarromFrame();
+    autoScrollToCarromTurn();
 }
 
 function resetStrikerPosition() {
@@ -1891,6 +1901,7 @@ function checkCarromWinCondition() {
                     turnEl.style.color = '#ffffff';
                     turnEl.style.background = 'rgba(224,59,255,0.3)';
                 }
+                autoScrollToCarromTurn();
             }
         }
     }
@@ -1908,6 +1919,7 @@ function triggerCarromBotShot() {
         turnEl.style.color = '#ff9f43';
         turnEl.style.background = 'rgba(255,159,67,0.2)';
     }
+    autoScrollToCarromTurn();
 
     setTimeout(() => {
         if (!carromState.gameActive) return;

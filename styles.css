@@ -147,6 +147,18 @@ body {
 }
 
 /* View Screens */
+/* Hide all scrollbars globally while keeping full touch/mouse scrollability */
+::-webkit-scrollbar {
+    display: none;
+    width: 0px;
+    height: 0px;
+}
+
+* {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
 .screen {
     display: none;
     flex-direction: column;
@@ -156,6 +168,7 @@ body {
     position: relative;
     animation: slideUpFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
 }
 
 .screen.active {
@@ -163,11 +176,10 @@ body {
 }
 
 #carrom-game-screen {
-    overflow: hidden !important;
-    touch-action: none !important;
-    padding-bottom: 20px !important;
-    user-select: none;
-    -webkit-user-select: none;
+    overflow-y: auto !important;
+    padding-bottom: 90px !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
 }
 
 #carromCanvas {
