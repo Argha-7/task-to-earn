@@ -6,6 +6,7 @@ let globalUsers = [];
 let globalPayouts = [];
 let globalTasks = [];
 let globalTaskLogs = [];
+let globalNotifications = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     initAdminListeners();
@@ -37,6 +38,12 @@ function initAdminListeners() {
         DatabaseAPI.listenTaskCompletions((logs) => {
             globalTaskLogs = logs || [];
             renderTaskLogsTable();
+        });
+
+        // Listen to all sent notifications
+        DatabaseAPI.listenAllNotifications((notifications) => {
+            globalNotifications = notifications || [];
+            renderNotificationsTable();
         });
     } else {
         loadFallbackData();
@@ -388,26 +395,122 @@ function deleteTaskClick(taskId) {
     }
 }
 
+function renderNotificationsTable() {
+    const tableBody = document.getElementById('admin-notifications-table');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = '';
+    if (globalNotifications.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No sent notifications yet</td></tr>`;
+        return;
+    }
+
+    globalNotifications.forEach(notif => {
+        const targetLabel = notif.target === 'ALL' ? '📢 ALL Users' : (notif.target || 'User');
+        const dateDisplay = notif.dateStr || (notif.timestamp ? new Date(notif.timestamp).toLocaleString() : 'Recent');
+        const safeTitle = (notif.title || 'Alert').replace(/'/g, "\\'");
+        const safeMsg = (notif.message || '').replace(/'/g, "\\'");
+
+        tableBody.innerHTML += `
+            <tr>
+                <td><span style="font-size: 12px; color: var(--text-muted);">${dateDisplay}</span></td>
+                <td><span class="badge-status status-approved">${targetLabel}</span></td>
+                <td><strong>${notif.title || 'Alert'}</strong></td>
+                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${notif.message || ''}</td>
+                <td>
+                    <button class="btn-action btn-edit" onclick="editNotification('${notif.id}')" title="Edit Notification"><i class="fa-solid fa-pen"></i> Edit</button>
+                    <button class="btn-action btn-delete" onclick="deleteNotificationClick('${notif.id}')" title="Delete Notification"><i class="fa-solid fa-trash"></i> Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
 function handleNotificationSubmit(e) {
     e.preventDefault();
+    const editId = document.getElementById('alert-edit-id').value;
     const target = document.getElementById('alert-target-user').value;
     const title = document.getElementById('alert-title').value;
     const msg = document.getElementById('alert-msg').value;
 
-    const notifObj = { title, message: msg, timestamp: Date.now() };
+    const notifObj = {
+        id: editId || ('NOTIF_' + Date.now()),
+        target: target,
+        title: title,
+        message: msg,
+        timestamp: Date.now(),
+        dateStr: new Date().toLocaleString()
+    };
 
     if (typeof DatabaseAPI !== 'undefined') {
-        DatabaseAPI.sendUserNotification(target, notifObj, (success) => {
+        DatabaseAPI.saveNotification(notifObj, (success) => {
             if (success) {
-                alert(`Notification sent successfully to ${target === 'ALL' ? 'ALL Users' : target}!`);
-                document.getElementById('alert-title').value = '';
-                document.getElementById('alert-msg').value = '';
+                alert(editId ? 'Notification updated successfully!' : `Notification sent successfully to ${target === 'ALL' ? 'ALL Users' : target}!`);
+                resetNotificationForm();
             }
         });
     } else {
-        alert(`Notification sent to ${target}!`);
+        let list = JSON.parse(localStorage.getItem('todoearn_notifications') || '[]');
+        const idx = list.findIndex(n => n.id === notifObj.id);
+        if (idx !== -1) list[idx] = notifObj;
+        else list.unshift(notifObj);
+        localStorage.setItem('todoearn_notifications', JSON.stringify(list));
+        globalNotifications = list;
+        renderNotificationsTable();
+        alert(editId ? 'Notification updated!' : `Notification sent to ${target}!`);
+        resetNotificationForm();
     }
 }
+
+function editNotification(notifId) {
+    const notif = globalNotifications.find(n => n.id === notifId);
+    if (!notif) return;
+
+    document.getElementById('alert-edit-id').value = notif.id;
+    document.getElementById('alert-target-user').value = notif.target || 'ALL';
+    document.getElementById('alert-title').value = notif.title || '';
+    document.getElementById('alert-msg').value = notif.message || '';
+
+    const heading = document.getElementById('alert-form-heading');
+    if (heading) heading.textContent = 'Edit Sent Notification';
+    const btnSubmit = document.getElementById('btn-submit-alert');
+    if (btnSubmit) btnSubmit.textContent = 'Update Notification';
+    const btnCancel = document.getElementById('btn-cancel-alert-edit');
+    if (btnCancel) btnCancel.style.display = 'inline-block';
+
+    const alertsSec = document.getElementById('sec-alerts');
+    if (alertsSec) alertsSec.scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetNotificationForm() {
+    const form = document.getElementById('form-send-alert');
+    if (form) form.reset();
+    document.getElementById('alert-edit-id').value = '';
+    const heading = document.getElementById('alert-form-heading');
+    if (heading) heading.textContent = 'Send Targeted / Broadcast Notification';
+    const btnSubmit = document.getElementById('btn-submit-alert');
+    if (btnSubmit) btnSubmit.textContent = 'Send Notification';
+    const btnCancel = document.getElementById('btn-cancel-alert-edit');
+    if (btnCancel) btnCancel.style.display = 'none';
+}
+
+function deleteNotificationClick(notifId) {
+    if (confirm('Are you sure you want to delete this notification? It will be removed for users as well.')) {
+        if (typeof DatabaseAPI !== 'undefined') {
+            DatabaseAPI.deleteNotification(notifId, (success) => {
+                if (success) {
+                    alert('Notification deleted successfully!');
+                }
+            });
+        } else {
+            globalNotifications = globalNotifications.filter(n => n.id !== notifId);
+            localStorage.setItem('todoearn_notifications', JSON.stringify(globalNotifications));
+            renderNotificationsTable();
+            alert('Notification deleted!');
+        }
+    }
+}
+
 
 function handlePayoutAction(payoutId, status, userEmail, amount) {
     if (typeof DatabaseAPI !== 'undefined') {

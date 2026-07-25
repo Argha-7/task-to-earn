@@ -204,9 +204,10 @@
 
         <!-- 5. SEND ALERTS SECTION -->
         <div id="sec-alerts" class="admin-section">
-            <div class="admin-card" style="max-width: 600px;">
-                <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;">Send Targeted / Broadcast Notification</h3>
+            <div class="admin-card" style="max-width: 650px;">
+                <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;" id="alert-form-heading">Send Targeted / Broadcast Notification</h3>
                 <form id="form-send-alert" onsubmit="handleNotificationSubmit(event)">
+                    <input type="hidden" id="alert-edit-id">
                     <div class="admin-form-group">
                         <label class="admin-label">Target Audience</label>
                         <select id="alert-target-user" class="admin-input" required>
@@ -222,8 +223,32 @@
                         <label class="admin-label">Notification Message</label>
                         <textarea id="alert-msg" class="admin-input" style="height: 100px; padding: 12px;" placeholder="Type your message here..." required></textarea>
                     </div>
-                    <button type="submit" class="btn-admin-submit">Send Notification</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" id="btn-submit-alert" class="btn-admin-submit">Send Notification</button>
+                        <button type="button" id="btn-cancel-alert-edit" class="btn-admin-submit" style="background: rgba(255,255,255,0.1); display: none;" onclick="resetNotificationForm()">Cancel Edit</button>
+                    </div>
                 </form>
+            </div>
+
+            <!-- SENT NOTIFICATIONS LIST & MANAGEMENT -->
+            <div class="admin-card" style="margin-top: 24px;">
+                <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 16px;">Manage Sent Notifications</h3>
+                <div class="table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Target User</th>
+                                <th>Alert Title</th>
+                                <th>Message</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-notifications-table">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 

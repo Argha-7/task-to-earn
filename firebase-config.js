@@ -218,37 +218,89 @@ const DatabaseAPI = {
     },
 
     // Admin & App: Targeted User Notifications
-    sendUserNotification: function(userEmail, notificationObj, callback) {
+    saveNotification: function(notifData, callback) {
         if (isFirebaseConnected && db) {
-            if (userEmail === 'ALL') {
-                db.ref('global_notification').set({
-                    ...notificationObj,
-                    timestamp: Date.now()
-                }).then(() => { if (callback) callback(true); });
-            } else {
-                const safeKey = userEmail.replace(/[.#$\[\]]/g, "_");
-                db.ref('users/' + safeKey + '/notification').set({
-                    ...notificationObj,
-                    timestamp: Date.now()
-                }).then(() => { if (callback) callback(true); });
-            }
+            const notifId = notifData.id || 'NOTIF_' + Date.now();
+            notifData.id = notifId;
+            notifData.timestamp = notifData.timestamp || Date.now();
+            notifData.dateStr = notifData.dateStr || new Date().toLocaleString();
+            db.ref('notifications/' + notifId).set(notifData).then(() => {
+                if (callback) callback(true);
+            }).catch(err => {
+                console.error("Notification save error:", err);
+                if (callback) callback(false);
+            });
         } else {
-            localStorage.setItem('rewardzoo_notification', JSON.stringify(notificationObj));
+            let list = JSON.parse(localStorage.getItem('todoearn_notifications') || '[]');
+            notifData.id = notifData.id || 'NOTIF_' + Date.now();
+            notifData.timestamp = notifData.timestamp || Date.now();
+            notifData.dateStr = notifData.dateStr || new Date().toLocaleString();
+            const idx = list.findIndex(n => n.id === notifData.id);
+            if (idx !== -1) {
+                list[idx] = notifData;
+            } else {
+                list.unshift(notifData);
+            }
+            localStorage.setItem('todoearn_notifications', JSON.stringify(list));
             if (callback) callback(true);
+        }
+    },
+
+    sendUserNotification: function(userEmail, notificationObj, callback) {
+        const notifData = {
+            id: notificationObj.id || 'NOTIF_' + Date.now(),
+            target: userEmail,
+            title: notificationObj.title,
+            message: notificationObj.message,
+            timestamp: Date.now(),
+            dateStr: new Date().toLocaleString()
+        };
+        this.saveNotification(notifData, callback);
+    },
+
+    deleteNotification: function(notifId, callback) {
+        if (isFirebaseConnected && db) {
+            db.ref('notifications/' + notifId).remove().then(() => {
+                if (callback) callback(true);
+            });
+        } else {
+            let list = JSON.parse(localStorage.getItem('todoearn_notifications') || '[]');
+            list = list.filter(n => n.id !== notifId);
+            localStorage.setItem('todoearn_notifications', JSON.stringify(list));
+            if (callback) callback(true);
+        }
+    },
+
+    listenAllNotifications: function(callback) {
+        if (isFirebaseConnected && db) {
+            db.ref('notifications').on('value', (snapshot) => {
+                const data = snapshot.val();
+                const list = data ? Object.values(data) : [];
+                list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                if (callback) callback(list);
+            });
+        } else {
+            const list = JSON.parse(localStorage.getItem('todoearn_notifications') || '[]');
+            list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            if (callback) callback(list);
         }
     },
 
     listenUserNotification: function(userEmail, callback) {
         if (isFirebaseConnected && db && userEmail) {
-            const safeKey = userEmail.replace(/[.#$\[\]]/g, "_");
-            db.ref('users/' + safeKey + '/notification').on('value', (snapshot) => {
-                const val = snapshot.val();
-                if (val && callback) callback(val);
+            db.ref('notifications').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const list = Object.values(data);
+                    const userNotifs = list.filter(n => n.target === 'ALL' || n.target === userEmail);
+                    userNotifs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                    if (userNotifs.length > 0 && callback) callback(userNotifs[0]);
+                }
             });
-            db.ref('global_notification').on('value', (snapshot) => {
-                const val = snapshot.val();
-                if (val && callback) callback(val);
-            });
+        } else {
+            const list = JSON.parse(localStorage.getItem('todoearn_notifications') || '[]');
+            const userNotifs = list.filter(n => n.target === 'ALL' || n.target === userEmail);
+            if (userNotifs.length > 0 && callback) callback(userNotifs[0]);
         }
     },
 
