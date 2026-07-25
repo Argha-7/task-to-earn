@@ -499,12 +499,21 @@
                 <div style="margin-top:14px; width:100%; max-width:320px; margin-left:auto; margin-right:auto;">
                     <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">
                         <span>Position Striker</span>
-                        <span>Power</span>
+                        <span>Aim Direction</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
+                        <input type="range" id="carrom-slider-pos" min="40" max="280" value="160" oninput="updateStrikerSliderPos(this.value)" style="flex: 1; accent-color: var(--accent-magenta);" title="Position">
+                        <input type="range" id="carrom-slider-aim" min="-160" max="-20" value="-90" oninput="updateStrikerAimAngle(this.value)" style="flex: 1; accent-color: #00d2d3;" title="Aim Direction">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">
+                        <span>Shot Power</span>
+                        <span id="carrom-power-val" style="color: #ff9f43; font-weight: 800;">15</span>
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
-                        <input type="range" id="carrom-slider-pos" min="40" max="280" value="160" oninput="updateStrikerSliderPos(this.value)" style="flex: 1; accent-color: var(--accent-magenta);">
-                        <input type="range" id="carrom-slider-power" min="6" max="24" value="15" style="width: 80px; accent-color: #ff9f43;">
+                        <input type="range" id="carrom-slider-power" min="8" max="26" value="15" oninput="document.getElementById('carrom-power-val').textContent=this.value" style="width: 100%; accent-color: #ff9f43;">
                     </div>
+
                     <div style="display: flex; gap: 10px;">
                         <button class="btn btn-primary" id="btn-carrom-shoot" onclick="shootCarromStriker()">⚡ STRIKE!</button>
                         <button class="btn" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; width: auto; padding: 0 16px;" onclick="initCarromBoard()">Reset</button>

@@ -1349,13 +1349,20 @@ function updateStrikerSliderPos(val) {
     drawCarromFrame();
 }
 
+function updateStrikerAimAngle(degVal) {
+    if (carromState.striker.isMoving) return;
+    const rad = (parseInt(degVal, 10) * Math.PI) / 180;
+    carromState.aimAngle = rad;
+    drawCarromFrame();
+}
+
 function setupCarromCanvasEvents() {
     const canvas = carromState.canvas;
     if (!canvas || canvas.dataset.hasListeners) return;
 
     canvas.dataset.hasListeners = 'true';
 
-    const handlePointerMove = (e) => {
+    const handleAimPointer = (e) => {
         if (!carromState.gameActive || carromState.striker.isMoving) return;
         const rect = canvas.getBoundingClientRect();
         const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : null);
@@ -1365,13 +1372,22 @@ function setupCarromCanvasEvents() {
             const touchX = (clientX - rect.left) * (320 / rect.width);
             const touchY = (clientY - rect.top) * (320 / rect.height);
 
-            carromState.aimAngle = Math.atan2(touchY - carromState.striker.y, touchX - carromState.striker.x);
+            const angle = Math.atan2(touchY - carromState.striker.y, touchX - carromState.striker.x);
+            carromState.aimAngle = angle;
+
+            // Sync Aim Slider
+            const deg = Math.round((angle * 180) / Math.PI);
+            const aimSlider = document.getElementById('carrom-slider-aim');
+            if (aimSlider) aimSlider.value = Math.max(-160, Math.min(-20, deg));
+
             drawCarromFrame();
         }
     };
 
-    canvas.addEventListener('mousemove', handlePointerMove);
-    canvas.addEventListener('touchmove', handlePointerMove, { passive: true });
+    canvas.addEventListener('mousedown', handleAimPointer);
+    canvas.addEventListener('mousemove', handleAimPointer);
+    canvas.addEventListener('touchstart', handleAimPointer, { passive: true });
+    canvas.addEventListener('touchmove', handleAimPointer, { passive: true });
 }
 
 function drawCarromFrame() {
@@ -1443,17 +1459,31 @@ function drawCarromFrame() {
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // Aim Line
+    // 6. Draw Aim Line with Direction Arrow Head 🎯
     if (!s.isMoving && carromState.gameActive) {
+        const aimLen = 65;
+        const targetX = s.x + Math.cos(carromState.aimAngle) * aimLen;
+        const targetY = s.y + Math.sin(carromState.aimAngle) * aimLen;
+
         ctx.beginPath();
         ctx.moveTo(s.x, s.y);
-        const aimLen = 42;
-        ctx.lineTo(s.x + Math.cos(carromState.aimAngle) * aimLen, s.y + Math.sin(carromState.aimAngle) * aimLen);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([4, 4]);
+        ctx.lineTo(targetX, targetY);
+        ctx.strokeStyle = '#e03bff';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5, 3]);
         ctx.stroke();
         ctx.setLineDash([]);
+
+        // Sharp Arrowhead Pointer 🎯
+        const headLen = 12;
+        const angle = carromState.aimAngle;
+        ctx.beginPath();
+        ctx.moveTo(targetX, targetY);
+        ctx.lineTo(targetX - headLen * Math.cos(angle - Math.PI / 6), targetY - headLen * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(targetX - headLen * Math.cos(angle + Math.PI / 6), targetY - headLen * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fillStyle = '#e03bff';
+        ctx.fill();
     }
 }
 
