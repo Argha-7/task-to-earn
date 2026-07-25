@@ -1021,23 +1021,21 @@ body {
    10. BOTTOM NAVIGATION BAR (FIXED FOR MOBILE SAFE AREA)
    ========================================================================== */
 .bottom-nav-bar {
-    position: fixed;
+    position: absolute;
     bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100%;
-    max-width: 480px;
+    left: 0;
+    right: 0;
     height: 70px;
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: rgba(12, 12, 32, 0.98);
     backdrop-filter: blur(25px);
     border-top: 1px solid rgba(255, 255, 255, 0.12);
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: space-between;
     padding-left: 10px;
     padding-right: 10px;
-    z-index: 99999;
+    z-index: 999;
 }
 
 .nav-item {
