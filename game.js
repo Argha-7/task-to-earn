@@ -115,14 +115,17 @@ const AppState = {
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
-    loadStateFromStorage();
-    initTelegramUser();
-    setupEventListeners();
-    setupStorageSyncListener();
+    try {
+        loadStateFromStorage();
+        initTelegramUser();
+        setupEventListeners();
+        setupStorageSyncListener();
 
-    // Ensure main interface header & bottom navigation bar are always visible
-    showMainInterface();
-    renderAllViews();
+        showMainInterface();
+        renderAllViews();
+    } catch (err) {
+        console.error('App init warning:', err);
+    }
 
     // Splash Screen Transition
     setTimeout(() => {
@@ -131,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         showMainInterface();
         navigateToTab('home-screen');
-    }, 1500);
+    }, 1200);
 });
 
 // Real-Time Cross Window & Firebase Synchronization Listener
@@ -457,20 +460,34 @@ function navigateToTab(screenId) {
     renderAllViews();
 }
 
-// Render All UI Elements
+// Render All UI Elements Safely
 function renderAllViews() {
     if (AppState.user) {
-        document.getElementById('display-user-name').textContent = AppState.user.name;
-        document.getElementById('profile-name-val').textContent = AppState.user.name;
-        document.getElementById('profile-email-val').textContent = AppState.user.email;
+        const uName = document.getElementById('display-user-name');
+        if (uName) uName.textContent = AppState.user.name;
+        const pName = document.getElementById('profile-name-val');
+        if (pName) pName.textContent = AppState.user.name;
+        const pEmail = document.getElementById('profile-email-val');
+        if (pEmail) pEmail.textContent = AppState.user.email;
     }
 
-    document.getElementById('user-coin-balance').textContent = AppState.coins;
-    document.getElementById('wallet-balance-val').textContent = AppState.coins;
-    document.getElementById('profile-total-earned').textContent = AppState.totalEarned;
-    document.getElementById('invite-code-val').textContent = AppState.inviteCode;
-    document.getElementById('refer-count').textContent = AppState.invitedCount;
-    document.getElementById('refer-earned').textContent = AppState.inviteEarned;
+    const uCoin = document.getElementById('user-coin-balance');
+    if (uCoin) uCoin.textContent = AppState.coins;
+
+    const wBal = document.getElementById('wallet-balance-val');
+    if (wBal) wBal.textContent = AppState.coins;
+
+    const pEarned = document.getElementById('profile-total-earned');
+    if (pEarned) pEarned.textContent = AppState.totalEarned;
+
+    const invCode = document.getElementById('invite-code-val');
+    if (invCode) invCode.textContent = AppState.inviteCode || 'TODO123';
+
+    const refCount = document.getElementById('refer-count');
+    if (refCount) refCount.textContent = AppState.invitedCount || 0;
+
+    const refEarned = document.getElementById('refer-earned');
+    if (refEarned) refEarned.textContent = AppState.inviteEarned || 0;
 
     // Daily Claim Button State
     const claimBtn = document.getElementById('btn-claim-daily');
