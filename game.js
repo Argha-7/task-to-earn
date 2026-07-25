@@ -448,13 +448,17 @@ function setupEventListeners() {
 
 // Interface Views Navigation
 function showMainInterface() {
-    document.getElementById('main-app-header').style.display = 'flex';
-    document.getElementById('main-bottom-nav').style.display = 'flex';
+    const header = document.getElementById('main-app-header');
+    const bottomNav = document.getElementById('main-bottom-nav');
+    if (header) header.style.setProperty('display', 'flex', 'important');
+    if (bottomNav) bottomNav.style.setProperty('display', 'flex', 'important');
 }
 
 function showAuthView(screenId) {
-    document.getElementById('main-app-header').style.display = 'none';
-    document.getElementById('main-bottom-nav').style.display = 'none';
+    const header = document.getElementById('main-app-header');
+    const bottomNav = document.getElementById('main-bottom-nav');
+    if (header) header.style.setProperty('display', 'none', 'important');
+    if (bottomNav) bottomNav.style.setProperty('display', 'none', 'important');
     
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const target = document.getElementById(screenId);
@@ -495,11 +499,11 @@ function navigateToTab(screenId) {
 
     // Ensure header & bottom nav are visible for main screens
     const mainScreens = ['home-screen', 'battle-screen', 'wallet-screen', 'refer-screen', 'profile-screen', 'history-screen'];
+    const bottomNav = document.getElementById('main-bottom-nav');
     if (mainScreens.includes(screenId)) {
         showMainInterface();
     } else {
-        const bottomNav = document.getElementById('main-bottom-nav');
-        if (bottomNav) bottomNav.style.display = 'none';
+        if (bottomNav) bottomNav.style.setProperty('display', 'none', 'important');
     }
 
     // Update Bottom Nav active state
