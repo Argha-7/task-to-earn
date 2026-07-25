@@ -113,29 +113,40 @@ const AppState = {
     }
 };
 
-// Initialize App
-document.addEventListener('DOMContentLoaded', () => {
-    loadStateFromStorage();
-    initTelegramUser();
-    setupEventListeners();
-    setupStorageSyncListener();
-    renderAllViews();
+// Bulletproof Fail-Safe App Initializer
+function initApp() {
+    try {
+        loadStateFromStorage();
+        initTelegramUser();
+        setupEventListeners();
+        setupStorageSyncListener();
+        renderAllViews();
+    } catch (e) {
+        console.error("App Initialization non-fatal notice:", e);
+    }
 
-    // Keep main header & nav bar hidden during splash loading animation
     const header = document.getElementById('main-app-header');
     const nav = document.getElementById('main-bottom-nav');
     if (header) header.style.display = 'none';
     if (nav) nav.style.display = 'none';
 
-    // Lightning Fast Splash Screen Transition (0.4 seconds)
+    // Instant Fail-Safe Splash Dismissal (200ms)
     setTimeout(() => {
         const splash = document.getElementById('splash-screen');
-        if (splash) splash.classList.remove('active');
-        
+        if (splash) {
+            splash.classList.remove('active');
+            splash.style.display = 'none';
+        }
         showMainInterface();
         navigateToTab('home-screen');
-    }, 400);
-});
+    }, 200);
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
 
 // Real-Time Cross Window & Firebase Synchronization Listener
 function setupStorageSyncListener() {
