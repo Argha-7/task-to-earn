@@ -1597,7 +1597,7 @@ function runCarromPhysicsLoop() {
         s.isMoving = false;
     }
 
-    // Pieces Physics & Collision Response
+    // 2. Move Carrom Pieces & Apply Friction + Check Pockets
     for (let i = carromState.pieces.length - 1; i >= 0; i--) {
         const p = carromState.pieces[i];
         if (Math.abs(p.vx) > 0.08 || Math.abs(p.vy) > 0.08) {
@@ -1607,12 +1607,13 @@ function runCarromPhysicsLoop() {
             p.vx *= 0.97;
             p.vy *= 0.97;
 
+            // Border Bounce
             if (p.x - p.r < 18) { p.x = 18 + p.r; p.vx *= -0.85; }
             if (p.x + p.r > 302) { p.x = 302 - p.r; p.vx *= -0.85; }
             if (p.y - p.r < 18) { p.y = 18 + p.r; p.vy *= -0.85; }
             if (p.y + p.r > 302) { p.y = 302 - p.r; p.vy *= -0.85; }
 
-            // Pocketing Logic
+            // Pocketing Check
             let pocketed = false;
             carromState.pockets.forEach(pkt => {
                 const dist = Math.hypot(p.x - pkt.x, p.y - pkt.y);
@@ -1635,22 +1636,39 @@ function runCarromPhysicsLoop() {
                 carromState.pieces.splice(i, 1);
                 continue;
             }
+        } else {
+            p.vx = 0; p.vy = 0;
         }
+    }
 
-        // Collision: Striker <-> Piece
+    // 3. Collision Check: Striker <-> ALL Pieces (Stationary & Moving!)
+    carromState.pieces.forEach(p => {
         const dx = p.x - s.x;
         const dy = p.y - s.y;
         const dist = Math.hypot(dx, dy);
-        if (dist < s.r + p.r) {
+        const minDist = s.r + p.r;
+
+        if (dist < minDist && dist > 0) {
+            isMoving = true;
             const angle = Math.atan2(dy, dx);
             const speed = Math.hypot(s.vx, s.vy);
-            p.vx = Math.cos(angle) * speed * 0.85;
-            p.vy = Math.sin(angle) * speed * 0.85;
-            s.vx *= -0.4;
-            s.vy *= -0.4;
+
+            // Transfer velocity to piece
+            p.vx = Math.cos(angle) * Math.max(speed, 8) * 0.85;
+            p.vy = Math.sin(angle) * Math.max(speed, 8) * 0.85;
+
+            // Bounce striker back
+            s.vx *= -0.35;
+            s.vy *= -0.35;
+
+            // Push piece out of overlap to prevent sticking
+            const overlap = minDist - dist;
+            p.x += Math.cos(angle) * overlap;
+            p.y += Math.sin(angle) * overlap;
+
             audio.playClick();
         }
-    }
+    });
 
     // Collision: Piece <-> Piece
     for (let i = 0; i < carromState.pieces.length; i++) {
