@@ -1369,6 +1369,7 @@ let tttGameActive = true;
 
 function startTicTacToeBattleGame() {
     audio.playClick();
+    showMainInterface();
     tttBoard = ['', '', '', '', '', '', '', '', ''];
     tttGameActive = true;
     
@@ -1462,6 +1463,7 @@ let carromState = {
 
 function startCarromBattleGame() {
     audio.playClick();
+    showMainInterface();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const carromScreen = document.getElementById('carrom-game-screen');
     if (carromScreen) carromScreen.classList.add('active');
