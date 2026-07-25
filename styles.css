@@ -1276,3 +1276,52 @@ body {
     color: #1b84ff;
 }
 
+/* Matchmaking Avatar Rings & VS Animations */
+.avatar-ring {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin: 0 auto;
+}
+
+.cyan-ring {
+    border: 3px solid #00d2d3;
+    box-shadow: 0 0 16px rgba(0, 210, 211, 0.5);
+}
+
+.pink-ring {
+    border: 3px solid #e03bff;
+    box-shadow: 0 0 16px rgba(224, 59, 255, 0.5);
+}
+
+.vs-badge-pulse {
+    font-size: 18px;
+    font-weight: 900;
+    color: #ff5252;
+    background: rgba(255, 82, 82, 0.15);
+    border: 2px solid #ff5252;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 20px rgba(255, 82, 82, 0.6);
+    animation: vsPulse 1s infinite alternate;
+}
+
+@keyframes vsPulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 10px rgba(255, 82, 82, 0.4); }
+    100% { transform: scale(1.1); box-shadow: 0 0 25px rgba(255, 82, 82, 0.8); }
+}
+
+@keyframes bounce {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-10px); }
+}
+

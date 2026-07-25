@@ -588,6 +588,71 @@
                     <!-- Dynamically populated notifications -->
                 </div>
             </div>
+        <!-- ==========================================
+             14. BATTLE MATCHMAKING ANIMATION MODAL
+             ========================================== -->
+        <div class="modal-overlay" id="battle-matchmaking-modal">
+            <div class="modal-box" style="max-width: 360px; text-align: center; padding: 28px 20px;">
+                <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 20px; color: #fff;">⚔️ BATTLE MATCHMAKING</h3>
+
+                <!-- Matchmaking VS Animation Box -->
+                <div style="display: flex; align-items: center; justify-content: space-around; margin-bottom: 24px; position: relative;">
+                    <!-- Player 1 (You) -->
+                    <div style="text-align: center;">
+                        <div class="avatar-ring cyan-ring">
+                            <i class="fa-solid fa-user" style="font-size: 26px; color: #00d2d3;"></i>
+                        </div>
+                        <div id="mm-player1-name" style="font-size: 13px; font-weight: 800; margin-top: 8px;">YOU</div>
+                        <span style="font-size: 10px; color: var(--success-green);">Ready</span>
+                    </div>
+
+                    <!-- VS Badge -->
+                    <div class="vs-badge-pulse">VS</div>
+
+                    <!-- Player 2 (Opponent / Bot) -->
+                    <div style="text-align: center;">
+                        <div class="avatar-ring pink-ring" id="mm-player2-ring">
+                            <i id="mm-player2-icon" class="fa-solid fa-spinner fa-spin" style="font-size: 26px; color: #e03bff;"></i>
+                        </div>
+                        <div id="mm-player2-name" style="font-size: 13px; font-weight: 800; margin-top: 8px;">Searching...</div>
+                        <span id="mm-player2-status" style="font-size: 10px; color: var(--warning-yellow);">Online Player...</span>
+                    </div>
+                </div>
+
+                <div id="mm-status-text" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Searching online player...</div>
+
+                <!-- Telegram Ad Slot Placeholder during matchmaking -->
+                <div id="tg-ad-matchmaking-slot" style="background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); border-radius: 10px; padding: 10px; font-size: 11px; color: #a0a0b0;">
+                    📢 <span id="tg-ad-status-text">Telegram Ad Banner Ready (Adsgram API Connected)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             15. BATTLE VICTORY / DEFEAT MODAL
+             ========================================== -->
+        <div class="modal-overlay" id="battle-victory-modal">
+            <div class="modal-box" style="max-width: 360px; text-align: center; padding: 28px 20px;">
+                <div id="victory-icon-container" style="font-size: 54px; margin-bottom: 10px; animation: bounce 1s infinite alternate;">🏆</div>
+                <h2 id="victory-title" style="font-size: 24px; font-weight: 900; color: #ffb800; margin-bottom: 4px;">VICTORY!</h2>
+                <p id="victory-subtitle" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">You defeated the opponent in battle!</p>
+
+                <!-- Reward Coin Box -->
+                <div style="background: rgba(255, 184, 0, 0.15); border: 1px solid rgba(255, 184, 0, 0.4); border-radius: 16px; padding: 14px; margin-bottom: 20px;">
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight: 700;">REWARD EARNED</span>
+                    <div style="font-size: 28px; font-weight: 900; color: #ffb800; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px;">
+                        <span id="victory-coins-val">+50</span> <i class="fa-solid fa-coins"></i>
+                    </div>
+                </div>
+
+                <!-- Telegram Ad Banner Container (Shown on Win Screen) -->
+                <div id="tg-ad-victory-slot" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 10px; margin-bottom: 20px; font-size: 12px; color: #fff;">
+                    <div style="font-weight: 800; color: var(--accent-magenta); margin-bottom: 4px;">📢 Sponsored Ad</div>
+                    <div id="tg-ad-victory-content">Telegram Adsgram Interstitial Slot Ready</div>
+                </div>
+
+                <button class="btn btn-primary" onclick="closeVictoryModal()">Claim & Continue</button>
+            </div>
         </div>
 
         <!-- ==========================================

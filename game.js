@@ -1207,35 +1207,92 @@ function startBattle(gameType, entryFee, winReward) {
         winReward: winReward
     };
 
-    if (gameType === 'color') {
-        startColorGame();
-    } else if (gameType === 'carrom') {
-        startCarromBattleGame();
-    } else if (gameType === 'spin') {
-        startSpinBattleGame();
-    } else if (gameType === 'tictactoe') {
-        startTicTacToeBattleGame();
+    openMatchmaking(gameType);
+}
+
+// Telegram Ads Integration Function
+function triggerTelegramAd(slotName = 'matchmaking') {
+    console.log(`📢 Triggering Telegram Ad for slot: ${slotName}`);
+    if (window.Adsgram) {
+        window.Adsgram.show().then((result) => {
+            console.log("Telegram Ad completed:", result);
+        }).catch((err) => {
+            console.warn("Telegram Ad skipped/error:", err);
+        });
+    } else {
+        const statusText = document.getElementById('tg-ad-status-text');
+        if (statusText) statusText.textContent = 'Telegram Adsgram SDK Ready';
     }
+}
+
+function openMatchmaking(gameType) {
+    const modal = document.getElementById('battle-matchmaking-modal');
+    if (!modal) return;
+    modal.classList.add('active');
+
+    document.getElementById('mm-player1-name').textContent = AppState.user ? AppState.user.name : 'YOU';
+    document.getElementById('mm-player2-name').textContent = 'Searching...';
+    document.getElementById('mm-player2-status').textContent = 'Online Players...';
+    document.getElementById('mm-player2-icon').className = 'fa-solid fa-spinner fa-spin';
+    document.getElementById('mm-status-text').textContent = 'Finding online player...';
+
+    triggerTelegramAd('matchmaking');
+
+    const botNames = ['Viper_Pro99', 'AlphaGamer', 'ShadowRider', 'CyberKing_X', 'StarGamer77', 'ProSniper_007'];
+
+    setTimeout(() => {
+        let opponentName = 'Online Player';
+        let isBot = false;
+
+        if (typeof globalUsers !== 'undefined' && globalUsers.length > 1) {
+            const otherUsers = globalUsers.filter(u => !AppState.user || u.email !== AppState.user.email);
+            if (otherUsers.length > 0) {
+                opponentName = otherUsers[Math.floor(Math.random() * otherUsers.length)].name || 'Online Player';
+            } else {
+                isBot = true;
+                opponentName = botNames[Math.floor(Math.random() * botNames.length)];
+            }
+        } else {
+            isBot = true;
+            opponentName = botNames[Math.floor(Math.random() * botNames.length)];
+        }
+
+        AppState.currentOpponent = { name: opponentName, isBot: isBot };
+
+        document.getElementById('mm-player2-name').textContent = opponentName;
+        document.getElementById('mm-player2-status').textContent = isBot ? '🤖 AI Bot Opponent' : '⚡ Online Real Player';
+        document.getElementById('mm-player2-icon').className = isBot ? 'fa-solid fa-robot' : 'fa-solid fa-user-astronaut';
+        document.getElementById('mm-status-text').textContent = `Match Found vs ${opponentName}! Starting...`;
+
+        audio.playCoin();
+
+        setTimeout(() => {
+            modal.classList.remove('active');
+
+            if (gameType === 'color') {
+                startColorGame();
+            } else if (gameType === 'carrom') {
+                startCarromBattleGame();
+            } else if (gameType === 'spin') {
+                startSpinBattleGame();
+            } else if (gameType === 'tictactoe') {
+                startTicTacToeBattleGame();
+            }
+        }, 1400);
+    }, 1400);
 }
 
 function completeBattleResult(won) {
     const battle = AppState.currentBattle || { winReward: 50, entryFee: 20, type: 'carrom' };
+    const opponent = AppState.currentOpponent || { name: 'Opponent' };
     
     if (won) {
-        audio.playWin();
         AppState.coins += battle.winReward;
         AppState.totalEarned += battle.winReward;
         AppState.battlesWonTotal = (AppState.battlesWonTotal || 0) + 1;
         addHistoryItem(`${battle.type.toUpperCase()} Battle Win`, `+${battle.winReward}`, true);
-        showToast(`🎉 Victory! Won +${battle.winReward} Coins!`);
-    } else {
-        audio.triggerHaptic('warning');
-        showToast('Defeat! Better luck next battle!');
     }
 
-    AppState.currentBattle = null;
-    saveStateToStorage();
-    
     if (typeof DatabaseAPI !== 'undefined' && AppState.user) {
         DatabaseAPI.saveBattleStats(AppState.user.email, {
             name: AppState.user.name,
@@ -1245,7 +1302,43 @@ function completeBattleResult(won) {
         });
     }
 
+    saveStateToStorage();
     renderAllViews();
+
+    triggerTelegramAd('victory');
+    showVictoryModal(won, battle.winReward, opponent.name);
+}
+
+function showVictoryModal(won, coinsReward, opponentName) {
+    const modal = document.getElementById('battle-victory-modal');
+    if (!modal) return;
+
+    const icon = document.getElementById('victory-icon-container');
+    const title = document.getElementById('victory-title');
+    const sub = document.getElementById('victory-subtitle');
+    const coinsVal = document.getElementById('victory-coins-val');
+
+    if (won) {
+        audio.playWin();
+        if (icon) icon.textContent = '🏆';
+        if (title) { title.textContent = 'VICTORY!'; title.style.color = '#ffb800'; }
+        if (sub) sub.textContent = `You defeated ${opponentName} in battle!`;
+        if (coinsVal) coinsVal.textContent = `+${coinsReward}`;
+    } else {
+        audio.triggerHaptic('error');
+        if (icon) icon.textContent = '💔';
+        if (title) { title.textContent = 'DEFEAT!'; title.style.color = '#ff5252'; }
+        if (sub) sub.textContent = `${opponentName} won this match. Try again!`;
+        if (coinsVal) coinsVal.textContent = `0`;
+    }
+
+    modal.classList.add('active');
+}
+
+function closeVictoryModal() {
+    audio.playClick();
+    const modal = document.getElementById('battle-victory-modal');
+    if (modal) modal.classList.remove('active');
     navigateToTab('battle-screen');
 }
 
