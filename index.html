@@ -525,40 +525,6 @@
                     <button class="ttt-cell" onclick="makeTTTMove(6)"></button>
                     <button class="ttt-cell" onclick="makeTTTMove(7)"></button>
                     <button class="ttt-cell" onclick="makeTTTMove(8)"></button>
-        <!-- ==========================================
-             10.6. CARROM BATTLE MINI-GAME SCREEN
-             ========================================== -->
-        <div id="carrom-game-screen" class="screen">
-            <div class="subpage-top-bar">
-                <button class="btn-back" onclick="navigateToTab('battle-screen')"><i class="fa-solid fa-arrow-left"></i> Exit Carrom</button>
-            </div>
-
-            <div class="game-container-card" style="padding: 20px; text-align: center; max-width: 380px; margin: 0 auto;">
-                <h2 style="font-size: 20px; font-weight: 900; margin-bottom: 4px;">🏆 Carrom Board Arena</h2>
-                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Pocket coins to score points and win the battle!</p>
-
-                <!-- Score Board -->
-                <div style="display: flex; justify-content: space-between; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 10px 16px; margin-bottom: 16px; border: 1px solid var(--border-color);">
-                    <div>
-                        <div style="font-size: 11px; color: var(--text-muted);">YOUR SCORE</div>
-                        <div id="carrom-user-score" style="font-size: 22px; font-weight: 900; color: #00d2d3;">0</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 11px; color: var(--text-muted);">OPPONENT SCORE</div>
-                        <div id="carrom-opp-score" style="font-size: 22px; font-weight: 900; color: #ff5252;">0</div>
-                    </div>
-                </div>
-
-                <!-- Carrom Canvas / Interactive Board -->
-                <div class="carrom-board-wrapper">
-                    <canvas id="carrom-canvas" width="300" height="300"></canvas>
-                </div>
-
-                <!-- Striker Control Actions -->
-                <div style="display: flex; gap: 10px; margin-top: 16px;">
-                    <button class="btn btn-primary" id="btn-carrom-strike" onclick="strikeCarromPuck()" style="flex: 1;">
-                        <i class="fa-solid fa-bullseye"></i> Strike Puck!
-                    </button>
                 </div>
             </div>
         </div>
