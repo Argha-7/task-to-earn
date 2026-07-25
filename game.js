@@ -199,6 +199,106 @@ function showNotificationModal(title, msg) {
     updateNotifDot();
 }
 
+// Dynamic Tasks Rendering & Task Handlers
+function renderDynamicTasks(tasks) {
+    const container = document.getElementById('dynamic-tasks-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    if (!tasks || tasks.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:13px; padding:16px;">No active tasks right now</div>';
+        return;
+    }
+
+    tasks.forEach(task => {
+        const card = document.createElement('div');
+        card.className = 'task-card';
+        card.onclick = () => simulateTaskReward(task);
+
+        card.innerHTML = `
+            <div class="task-icon-box icon-purple">
+                <i class="${task.icon || 'fa-solid fa-gift'}"></i>
+            </div>
+            <div class="task-info">
+                <div class="task-name">${task.title}</div>
+                <div class="task-desc">${task.desc || 'Complete task to earn rewards'}</div>
+            </div>
+            <div class="task-reward-tag">
+                +${task.reward} Coins <i class="fa-solid fa-coins"></i>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function simulateTaskReward(task) {
+    if (!task) return;
+    audio.playClick();
+
+    if (task.url && task.url !== '#') {
+        try { window.open(task.url, '_blank'); } catch(e) {}
+    }
+
+    const modal = document.getElementById('task-modal');
+    if (!modal) {
+        AppState.coins += (task.reward || 10);
+        AppState.totalEarned += (task.reward || 10);
+        addHistoryItem(task.title || 'Task Completed', `+${task.reward || 10}`, true);
+        saveStateToStorage();
+        renderAllViews();
+        showToast(`🎉 Claimed +${task.reward || 10} Coins!`);
+        return;
+    }
+
+    const titleEl = document.getElementById('modal-task-title');
+    const descEl = document.getElementById('modal-task-desc');
+    if (titleEl) titleEl.textContent = task.title || 'Task Simulation';
+    if (descEl) descEl.textContent = task.desc || 'Please wait for the timer to finish.';
+    
+    let timerVal = task.timer || 10;
+    const timerBox = document.getElementById('modal-timer-box');
+    const claimBtn = document.getElementById('btn-claim-task-reward');
+
+    if (timerBox) timerBox.textContent = `${timerVal}s`;
+    if (claimBtn) {
+        claimBtn.disabled = true;
+        claimBtn.textContent = 'Please Wait...';
+    }
+
+    modal.classList.add('active');
+    AppState.activeTask = task;
+
+    const interval = setInterval(() => {
+        timerVal--;
+        if (timerBox) timerBox.textContent = `${timerVal}s`;
+
+        if (timerVal <= 0) {
+            clearInterval(interval);
+            if (timerBox) timerBox.textContent = 'Ready!';
+            if (claimBtn) {
+                claimBtn.disabled = false;
+                claimBtn.textContent = `Claim +${task.reward} Coins`;
+            }
+        }
+    }, 1000);
+}
+
+function completeTaskReward() {
+    const modal = document.getElementById('task-modal');
+    if (modal) modal.classList.remove('active');
+
+    const task = AppState.activeTask;
+    const reward = task ? (task.reward || 15) : 15;
+
+    audio.playWin();
+    AppState.coins += reward;
+    AppState.totalEarned += reward;
+    addHistoryItem(task ? task.title : 'Task Completed', `+${reward}`, true);
+    saveStateToStorage();
+    renderAllViews();
+    showToast(`🎉 Task Completed! +${reward} Coins Earned!`);
+}
+
 function closeNotificationModal() {
     audio.playClick();
     const modal = document.getElementById('notification-modal');
