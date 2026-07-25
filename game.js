@@ -299,6 +299,54 @@ function applyAppSettings(settings) {
     if (spinDesc && spinCard) {
         spinDesc.textContent = `Entry: ${settings.spinFee || 25} Coins | Win: ${settings.spinWin || 60} Coins`;
         spinCard.setAttribute('onclick', `startBattle('spin', ${settings.spinFee || 25}, ${settings.spinWin || 60})`);
+}
+
+function showTelegramRewardedAd() {
+    audio.playClick();
+    if (window.Adsgram) {
+        // Adsgram Block ID - Replace 'block-1234' with your real block ID from Adsgram dashboard
+        const AdController = window.Adsgram.init({ blockId: "block-1234" });
+        
+        showToast("🎬 Loading Telegram Video Ad...");
+        AdController.show().then((result) => {
+            audio.playCoin();
+            showToast("🎉 Video Ad Finished! +50 Coins Awarded!");
+            if (AppState.user) {
+                const newCoins = (AppState.user.coins || 0) + 50;
+                if (typeof DatabaseAPI !== 'undefined') {
+                    DatabaseAPI.saveUserCoins(AppState.user.email, newCoins, () => {
+                        AppState.user.coins = newCoins;
+                        renderAllViews();
+                    });
+                } else {
+                    AppState.user.coins = newCoins;
+                    renderAllViews();
+                }
+            }
+        }).catch((error) => {
+            console.warn("Adsgram Ad status:", error);
+            showToast("ℹ️ Demo Mode: Ad simulated (+50 Coins)");
+            if (AppState.user) {
+                const newCoins = (AppState.user.coins || 0) + 50;
+                if (typeof DatabaseAPI !== 'undefined') {
+                    DatabaseAPI.saveUserCoins(AppState.user.email, newCoins, () => {
+                        AppState.user.coins = newCoins;
+                        renderAllViews();
+                    });
+                }
+            }
+        });
+    } else {
+        showToast("📺 Demo Ad Simulated: +50 Coins Awarded!");
+        if (AppState.user) {
+            const newCoins = (AppState.user.coins || 0) + 50;
+            if (typeof DatabaseAPI !== 'undefined') {
+                DatabaseAPI.saveUserCoins(AppState.user.email, newCoins, () => {
+                    AppState.user.coins = newCoins;
+                    renderAllViews();
+                });
+            }
+        }
     }
 }
 
