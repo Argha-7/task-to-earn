@@ -148,6 +148,52 @@ if (document.readyState === 'loading') {
     initApp();
 }
 
+// Interface Navigation Engine
+function showMainInterface() {
+    const header = document.getElementById('main-app-header');
+    const nav = document.getElementById('main-bottom-nav');
+    if (header) header.style.display = 'flex';
+    if (nav) nav.style.display = 'flex';
+}
+
+function navigateToTab(tabId) {
+    audio.playClick();
+
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
+        if (screen.id !== tabId) {
+            screen.style.display = 'none';
+        }
+    });
+
+    const targetScreen = document.getElementById(tabId);
+    if (targetScreen) {
+        targetScreen.classList.add('active');
+        targetScreen.style.display = 'flex';
+    }
+
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    
+    if (tabId === 'battle-screen') {
+        const item = document.getElementById('nav-battle');
+        if (item) item.classList.add('active');
+    } else if (tabId === 'wallet-screen') {
+        const item = document.getElementById('nav-wallet');
+        if (item) item.classList.add('active');
+    } else if (tabId === 'home-screen') {
+        const item = document.getElementById('nav-home');
+        if (item) item.classList.add('active');
+    } else if (tabId === 'refer-screen') {
+        const item = document.getElementById('nav-refer');
+        if (item) item.classList.add('active');
+    } else if (tabId === 'profile-screen') {
+        const item = document.getElementById('nav-profile');
+        if (item) item.classList.add('active');
+    }
+
+    showMainInterface();
+}
+
 // Real-Time Cross Window & Firebase Synchronization Listener
 function setupStorageSyncListener() {
     window.addEventListener('storage', (e) => {

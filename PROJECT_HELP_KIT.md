@@ -80,4 +80,4 @@ When adding new features or modifying code, always verify:
 
 ## 📝 4. Revision History
 
-- **2026-07-25:** Created `PROJECT_HELP_KIT.md`. Added interactive 2D Carrom Board mini-game physics engine (`startCarromBattleGame`), full Battle Arena, Tic-Tac-Toe, Online/Bot matchmaking, Telegram Ads hook, Admin Game status toggles, centered floating HOME navigation bar, and bulletproof fail-safe splash screen dismissal (`initApp` with `document.readyState` check, try-catch isolation, and explicit `splash.style.display = 'none'`).
+- **2026-07-25:** Created `PROJECT_HELP_KIT.md`. Added interactive 2D Carrom Board mini-game physics engine (`startCarromBattleGame`), full Battle Arena, Tic-Tac-Toe, Online/Bot matchmaking, Telegram Ads hook, Admin Game status toggles, centered floating HOME navigation bar, bulletproof fail-safe splash screen dismissal, and fixed missing `showMainInterface()` and `navigateToTab()` navigation functions in `game.js` so app opens smoothly and instantly!
