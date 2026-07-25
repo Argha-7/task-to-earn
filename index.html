@@ -238,13 +238,13 @@
             <h3 class="section-title">⚔️ Battle Arena Games</h3>
             <div class="tasks-grid" style="margin-bottom: 24px;">
                 <!-- Carrom Battle Card -->
-                <div class="task-card" id="card-battle-carrom" onclick="startBattle('carrom', 20, 50)">
+                <div class="task-card" onclick="startBattle('carrom', 20, 50)">
                     <div class="task-icon-box icon-purple">
                         <i class="fa-solid fa-trophy"></i>
                     </div>
                     <div class="task-info">
                         <div class="task-name">Carrom Battle</div>
-                        <div class="task-desc" id="desc-battle-carrom">Entry: 20 Coins | Win: 50 Coins</div>
+                        <div class="task-desc">Entry: 20 Coins | Win: 50 Coins</div>
                     </div>
                     <div class="task-reward-tag" style="background: rgba(224,59,255,0.15); color: var(--accent-magenta);">
                         Play Battle <i class="fa-solid fa-gamepad"></i>
@@ -252,13 +252,13 @@
                 </div>
 
                 <!-- Tic-Tac-Toe (Tik Tak) Battle Card -->
-                <div class="task-card" id="card-battle-tictactoe" onclick="startBattle('tictactoe', 10, 25)">
+                <div class="task-card" onclick="startBattle('tictactoe', 10, 25)">
                     <div class="task-icon-box icon-teal" style="background: rgba(255,159,67,0.2); color: #ff9f43;">
                         <i class="fa-solid fa-hashtag"></i>
                     </div>
                     <div class="task-info">
                         <div class="task-name">Tic-Tac-Toe (Tik Tak)</div>
-                        <div class="task-desc" id="desc-battle-tictactoe">Entry: 10 Coins | Win: 25 Coins</div>
+                        <div class="task-desc">Entry: 10 Coins | Win: 25 Coins</div>
                     </div>
                     <div class="task-reward-tag" style="background: rgba(255,159,67,0.15); color: #ff9f43;">
                         Play Battle <i class="fa-solid fa-gamepad"></i>
@@ -266,13 +266,13 @@
                 </div>
 
                 <!-- Color Game Battle Card -->
-                <div class="task-card" id="card-battle-color" onclick="startBattle('color', 15, 35)">
+                <div class="task-card" onclick="startBattle('color', 15, 35)">
                     <div class="task-icon-box icon-teal">
                         <i class="fa-solid fa-palette"></i>
                     </div>
                     <div class="task-info">
                         <div class="task-name">Color Guess Arena</div>
-                        <div class="task-desc" id="desc-battle-color">Entry: 15 Coins | Win: 35 Coins</div>
+                        <div class="task-desc">Entry: 15 Coins | Win: 35 Coins</div>
                     </div>
                     <div class="task-reward-tag" style="background: rgba(0,210,211,0.15); color: #00d2d3;">
                         Play Battle <i class="fa-solid fa-gamepad"></i>
@@ -280,13 +280,13 @@
                 </div>
 
                 <!-- Lucky Spin Battle Card -->
-                <div class="task-card" id="card-battle-spin" onclick="startBattle('spin', 25, 60)">
+                <div class="task-card" onclick="startBattle('spin', 25, 60)">
                     <div class="task-icon-box icon-red">
                         <i class="fa-solid fa-dharmachakra"></i>
                     </div>
                     <div class="task-info">
                         <div class="task-name">Lucky Spin Battle</div>
-                        <div class="task-desc" id="desc-battle-spin">Entry: 25 Coins | Win: 60 Coins</div>
+                        <div class="task-desc">Entry: 25 Coins | Win: 60 Coins</div>
                     </div>
                     <div class="task-reward-tag" style="background: rgba(255,61,113,0.15); color: var(--danger-red);">
                         Play Battle <i class="fa-solid fa-gamepad"></i>
@@ -658,7 +658,7 @@
         <!-- ==========================================
              11. BOTTOM NAVIGATION BAR
              ========================================== -->
-        <div class="bottom-nav-bar" id="main-bottom-nav">
+        <div class="bottom-nav-bar" id="main-bottom-nav" style="display: none;">
             <div class="nav-item" id="nav-battle" onclick="navigateToTab('battle-screen')">
                 <i class="fa-solid fa-gamepad"></i>
                 <span class="nav-dot"></span>
