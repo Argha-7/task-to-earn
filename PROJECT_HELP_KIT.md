@@ -80,4 +80,4 @@ When adding new features or modifying code, always verify:
 
 ## 📝 4. Revision History
 
-- **2026-07-25:** Created `PROJECT_HELP_KIT.md`. Added interactive 2D Carrom Board mini-game physics engine (`startCarromBattleGame`), full Battle Arena, Tic-Tac-Toe, Online/Bot matchmaking, Telegram Ads hook, Admin Game status toggles, centered floating HOME navigation bar, bulletproof fail-safe splash screen dismissal, and anchored `#main-bottom-nav` inside `#app-container` flexbox (`flex-shrink: 0; position: relative; height: 65px;`) so it is 100% visible on all mobile Telegram Mini App webviews above Telegram's native footer!
+- **2026-07-25:** Created `PROJECT_HELP_KIT.md`. Added interactive 2D Carrom Board mini-game physics engine (`startCarromBattleGame`), full Battle Arena, Tic-Tac-Toe, Online/Bot matchmaking, Telegram Ads hook, Admin Game status toggles, centered floating HOME navigation bar, bulletproof fail-safe splash screen dismissal, and fixed `.bottom-nav-bar` with `position: fixed; bottom: 0; z-index: 9999;` so it floats permanently at the bottom of the screen above all content across all tabs!
