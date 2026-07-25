@@ -1346,6 +1346,170 @@ function closeVictoryModal() {
     navigateToTab('battle-screen');
 }
 
+// Interactive Carrom Board Mini-Game Engine
+let carromState = {
+    userScore: 0,
+    oppScore: 0,
+    pucks: [],
+    striker: { x: 150, y: 250, radius: 12, vx: 0, vy: 0 }
+};
+
+function startCarromBattleGame() {
+    audio.playClick();
+    carromState.userScore = 0;
+    carromState.oppScore = 0;
+    
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const carromScreen = document.getElementById('carrom-game-screen');
+    if (carromScreen) carromScreen.classList.add('active');
+
+    const uScore = document.getElementById('carrom-user-score');
+    const oScore = document.getElementById('carrom-opp-score');
+    if (uScore) uScore.textContent = '0';
+    if (oScore) oScore.textContent = '0';
+
+    initCarromBoard();
+}
+
+function initCarromBoard() {
+    const canvas = document.getElementById('carrom-canvas');
+    if (!canvas) return;
+    
+    carromState.pucks = [
+        { x: 150, y: 150, radius: 10, color: '#ff3d71', pts: 30, type: 'queen', pocketed: false },
+        { x: 135, y: 140, radius: 9, color: '#ffffff', pts: 10, type: 'white', pocketed: false },
+        { x: 165, y: 140, radius: 9, color: '#ffffff', pts: 10, type: 'white', pocketed: false },
+        { x: 135, y: 160, radius: 9, color: '#111122', pts: 5, type: 'black', pocketed: false },
+        { x: 165, y: 160, radius: 9, color: '#111122', pts: 5, type: 'black', pocketed: false },
+        { x: 150, y: 130, radius: 9, color: '#ffffff', pts: 10, type: 'white', pocketed: false },
+        { x: 150, y: 170, radius: 9, color: '#111122', pts: 5, type: 'black', pocketed: false }
+    ];
+
+    carromState.striker = { x: 150, y: 250, radius: 13, vx: 0, vy: 0 };
+    drawCarromBoard();
+}
+
+function drawCarromBoard() {
+    const canvas = document.getElementById('carrom-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    ctx.fillStyle = '#e4c49f';
+    ctx.fillRect(0, 0, 300, 300);
+
+    const pockets = [{x: 20, y: 20}, {x: 280, y: 20}, {x: 20, y: 280}, {x: 280, y: 280}];
+    ctx.fillStyle = '#111111';
+    pockets.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 16, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    ctx.strokeStyle = '#8b4513';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(150, 150, 35, 0, Math.PI * 2);
+    ctx.stroke();
+
+    carromState.pucks.forEach(puck => {
+        if (!puck.pocketed) {
+            ctx.fillStyle = puck.color;
+            ctx.beginPath();
+            ctx.arc(puck.x, puck.y, puck.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+    });
+
+    const st = carromState.striker;
+    ctx.fillStyle = '#e03bff';
+    ctx.beginPath();
+    ctx.arc(st.x, st.y, st.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+}
+
+function strikeCarromPuck() {
+    audio.playClick();
+    const st = carromState.striker;
+    if (st.vx !== 0 || st.vy !== 0) return;
+
+    const angle = (Math.random() * 0.8 - 0.4) - Math.PI / 2;
+    const speed = 11 + Math.random() * 5;
+    st.vx = Math.cos(angle) * speed;
+    st.vy = Math.sin(angle) * speed;
+
+    runCarromPhysics();
+}
+
+function runCarromPhysics() {
+    const canvas = document.getElementById('carrom-canvas');
+    if (!canvas) return;
+
+    function update() {
+        const st = carromState.striker;
+        
+        st.x += st.vx;
+        st.y += st.vy;
+        st.vx *= 0.96;
+        st.vy *= 0.96;
+
+        if (st.x - st.radius < 10 || st.x + st.radius > 290) st.vx *= -1;
+        if (st.y - st.radius < 10 || st.y + st.radius > 290) st.vy *= -1;
+
+        carromState.pucks.forEach(p => {
+            if (p.pocketed) return;
+            const dx = p.x - st.x;
+            const dy = p.y - st.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < st.radius + p.radius) {
+                audio.playClick();
+                p.x += st.vx * 0.7;
+                p.y += st.vy * 0.7;
+                
+                const pockets = [{x: 20, y: 20}, {x: 280, y: 20}, {x: 20, y: 280}, {x: 280, y: 280}];
+                pockets.forEach(pkt => {
+                    if (Math.hypot(p.x - pkt.x, p.y - pkt.y) < 24) {
+                        p.pocketed = true;
+                        carromState.userScore += p.pts;
+                        audio.playCoin();
+                        const uVal = document.getElementById('carrom-user-score');
+                        if (uVal) uVal.textContent = carromState.userScore;
+                    }
+                });
+            }
+        });
+
+        drawCarromBoard();
+
+        if (Math.hypot(st.vx, st.vy) > 0.2) {
+            requestAnimationFrame(update);
+        } else {
+            st.vx = 0;
+            st.vy = 0;
+            st.x = 150;
+            st.y = 250;
+            drawCarromBoard();
+
+            setTimeout(() => {
+                carromState.oppScore += Math.floor(Math.random() * 12);
+                const oVal = document.getElementById('carrom-opp-score');
+                if (oVal) oVal.textContent = carromState.oppScore;
+
+                if (carromState.userScore >= 25 || carromState.oppScore >= 25 || carromState.pucks.every(p => p.pocketed)) {
+                    completeBattleResult(carromState.userScore >= carromState.oppScore);
+                }
+            }, 500);
+        }
+    }
+
+    update();
+}
+
 // Tic-Tac-Toe Interactive Battle Logic
 let tttBoard = ['', '', '', '', '', '', '', '', ''];
 let tttGameActive = true;
