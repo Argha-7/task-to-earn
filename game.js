@@ -1396,72 +1396,126 @@ function drawCarromFrame() {
 
     ctx.clearRect(0, 0, 320, 320);
 
-    // 1. Board Outer Wooden Frame
-    ctx.fillStyle = '#3a2512';
+    // 1. Board 3D Mahogany Wooden Frame
+    const woodGrad = ctx.createLinearGradient(0, 0, 320, 320);
+    woodGrad.addColorStop(0, '#4a2c13');
+    woodGrad.addColorStop(0.5, '#2e1908');
+    woodGrad.addColorStop(1, '#4a2c13');
+    ctx.fillStyle = woodGrad;
     ctx.fillRect(0, 0, 320, 320);
 
-    // Inner Playing Board Field
-    ctx.fillStyle = '#221509';
-    ctx.fillRect(15, 15, 290, 290);
-    ctx.strokeStyle = '#5a3d1e';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(15, 15, 290, 290);
+    // Inner Playing Field (Polished Wood Surface)
+    const boardGrad = ctx.createRadialGradient(160, 160, 20, 160, 160, 180);
+    boardGrad.addColorStop(0, '#2d1c0e');
+    boardGrad.addColorStop(1, '#1b0f06');
+    ctx.fillStyle = boardGrad;
+    ctx.fillRect(16, 16, 288, 288);
+    ctx.strokeStyle = '#6e4520';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(16, 16, 288, 288);
 
-    // 2. Draw 4 Corner Pockets
+    // 2. Draw 4 Corner Pockets with 3D Shadow Net
     carromState.pockets.forEach(p => {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = '#080503';
+        ctx.arc(p.x, p.y, p.r + 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#7a542b';
         ctx.fill();
-        ctx.strokeStyle = '#7a542b';
-        ctx.lineWidth = 2.5;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = '#060302';
+        ctx.fill();
+        ctx.strokeStyle = '#1a0d04';
+        ctx.lineWidth = 2;
         ctx.stroke();
     });
 
-    // 3. Center Circles & Baselines
+    // 3. Center Circle & Baselines
     ctx.beginPath();
     ctx.arc(160, 140, 32, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
     ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.beginPath();
     ctx.arc(160, 140, 8, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(231, 76, 60, 0.35)';
+    ctx.fillStyle = 'rgba(231, 76, 60, 0.4)';
     ctx.fill();
 
     // Baseline Line
     ctx.beginPath();
     ctx.moveTo(40, 260);
     ctx.lineTo(280, 260);
-    ctx.strokeStyle = 'rgba(224, 59, 255, 0.35)';
+    ctx.strokeStyle = 'rgba(224, 59, 255, 0.4)';
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // 4. Draw Carrom Pieces
-    carromState.pieces.forEach(p => {
+    // Foul Circles at Baseline Ends
+    [40, 280].forEach(bx => {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.fill();
-        ctx.strokeStyle = '#111111';
+        ctx.arc(bx, 260, 6, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(224, 59, 255, 0.2)';
+        ctx.strokeStyle = 'rgba(224, 59, 255, 0.6)';
         ctx.lineWidth = 1.5;
+        ctx.fill();
         ctx.stroke();
     });
 
-    // 5. Draw Striker
+    // 4. Draw Carrom Pieces with 3D Shading
+    carromState.pieces.forEach(p => {
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetY = 3;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+
+        if (p.type === 'white') {
+            const grad = ctx.createRadialGradient(p.x - 3, p.y - 3, 2, p.x, p.y, p.r);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(1, '#d0d0d5');
+            ctx.fillStyle = grad;
+        } else if (p.type === 'black') {
+            const grad = ctx.createRadialGradient(p.x - 3, p.y - 3, 2, p.x, p.y, p.r);
+            grad.addColorStop(0, '#3a4a5a');
+            grad.addColorStop(1, '#111822');
+            ctx.fillStyle = grad;
+        } else {
+            const grad = ctx.createRadialGradient(p.x - 3, p.y - 3, 2, p.x, p.y, p.r);
+            grad.addColorStop(0, '#ff5252');
+            grad.addColorStop(1, '#b71c1c');
+            ctx.fillStyle = grad;
+        }
+
+        ctx.fill();
+        ctx.strokeStyle = '#050505';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+    });
+
+    // 5. Draw 3D Metallic Golden Striker
     const s = carromState.striker;
+    ctx.save();
+    ctx.shadowColor = 'rgba(255, 193, 7, 0.5)';
+    ctx.shadowBlur = 10;
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffc107'; // Golden Striker
+    const strikerGrad = ctx.createRadialGradient(s.x - 4, s.y - 4, 3, s.x, s.y, s.r);
+    strikerGrad.addColorStop(0, '#fff3b0');
+    strikerGrad.addColorStop(0.5, '#ffc107');
+    strikerGrad.addColorStop(1, '#b78103');
+    ctx.fillStyle = strikerGrad;
     ctx.fill();
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2.5;
     ctx.stroke();
+    ctx.restore();
 
-    // 6. Draw Aim Line with Direction Arrow Head 🎯
+    // 6. Draw Aim Line with Trajectory Dots & Arrow Head 🎯
     if (!s.isMoving && carromState.gameActive) {
-        const aimLen = 65;
+        const aimLen = 70;
         const targetX = s.x + Math.cos(carromState.aimAngle) * aimLen;
         const targetY = s.y + Math.sin(carromState.aimAngle) * aimLen;
 
@@ -1475,7 +1529,7 @@ function drawCarromFrame() {
         ctx.setLineDash([]);
 
         // Sharp Arrowhead Pointer 🎯
-        const headLen = 12;
+        const headLen = 14;
         const angle = carromState.aimAngle;
         ctx.beginPath();
         ctx.moveTo(targetX, targetY);
@@ -1488,11 +1542,20 @@ function drawCarromFrame() {
 }
 
 function shootCarromStriker() {
-    if (!carromState.gameActive || carromState.striker.isMoving) return;
+    if (!carromState.canvas || !carromState.pieces || carromState.pieces.length === 0) {
+        initCarromBoard();
+    }
+
+    carromState.gameActive = true;
+    if (carromState.striker.isMoving) return;
 
     audio.playClick();
     const powerSlider = document.getElementById('carrom-slider-power');
-    const power = powerSlider ? parseInt(powerSlider.value, 10) : 15;
+    const power = powerSlider ? parseInt(powerSlider.value, 10) : 16;
+
+    if (!carromState.aimAngle || isNaN(carromState.aimAngle)) {
+        carromState.aimAngle = -Math.PI / 2;
+    }
 
     carromState.striker.vx = Math.cos(carromState.aimAngle) * power;
     carromState.striker.vy = Math.sin(carromState.aimAngle) * power;
