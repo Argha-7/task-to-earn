@@ -498,6 +498,15 @@ function navigateToTab(screenId) {
     const target = document.getElementById(screenId);
     if (target) target.classList.add('active');
 
+    // Ensure header & bottom nav are visible for main screens
+    const mainScreens = ['home-screen', 'battle-screen', 'wallet-screen', 'refer-screen', 'profile-screen', 'history-screen'];
+    if (mainScreens.includes(screenId)) {
+        showMainInterface();
+    } else {
+        const bottomNav = document.getElementById('main-bottom-nav');
+        if (bottomNav) bottomNav.style.display = 'none';
+    }
+
     // Update Bottom Nav active state
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
     
