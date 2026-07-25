@@ -290,17 +290,16 @@ const DatabaseAPI = {
         if (isFirebaseConnected && db && userEmail) {
             db.ref('notifications').on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
-                    const list = Object.values(data);
-                    const userNotifs = list.filter(n => n.target === 'ALL' || n.target === userEmail);
-                    userNotifs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                    if (userNotifs.length > 0 && callback) callback(userNotifs[0]);
-                }
+                const list = data ? Object.values(data) : [];
+                const userNotifs = list.filter(n => n.target === 'ALL' || n.target === userEmail);
+                userNotifs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                if (callback) callback(userNotifs);
             });
         } else {
             const list = JSON.parse(localStorage.getItem('todoearn_notifications') || '[]');
             const userNotifs = list.filter(n => n.target === 'ALL' || n.target === userEmail);
-            if (userNotifs.length > 0 && callback) callback(userNotifs[0]);
+            userNotifs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            if (callback) callback(userNotifs);
         }
     },
 

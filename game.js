@@ -156,15 +156,34 @@ function setupStorageSyncListener() {
             renderDynamicTasks(tasks);
         });
 
-        let lastNotifTime = 0;
-        if (AppState.user && AppState.user.email) {
-            DatabaseAPI.listenUserNotification(AppState.user.email, (notif) => {
-                if (notif && notif.message && notif.timestamp !== lastNotifTime) {
-                    lastNotifTime = notif.timestamp;
-                    showNotificationModal(notif.title, notif.message);
+        let knownNotifIds = new Set();
+        let isFirstLoad = true;
+
+        const handleNotifUpdate = (userNotifs) => {
+            AppState.notificationsList = userNotifs || [];
+            
+            if (userNotifs && userNotifs.length > 0) {
+                const latest = userNotifs[0];
+                if (!knownNotifIds.has(latest.id)) {
+                    knownNotifIds.add(latest.id);
+                    if (!isFirstLoad) {
+                        showNotificationModal(latest.title, latest.message);
+                    }
                 }
-            });
-        }
+            }
+            isFirstLoad = false;
+            
+            updateNotifDot();
+            const drawerModal = document.getElementById('notif-drawer-modal');
+            if (drawerModal && drawerModal.classList.contains('active')) {
+                renderNotificationDrawerList();
+            }
+        };
+
+        const userEmail = AppState.user ? AppState.user.email : 'DSTechVerse@gmail.com';
+        DatabaseAPI.listenUserNotification(userEmail, (userNotifs) => {
+            handleNotifUpdate(userNotifs);
+        });
     }
 }
 
@@ -172,18 +191,9 @@ function showNotificationModal(title, msg) {
     const modal = document.getElementById('notification-modal');
     if (!modal) return;
     document.getElementById('modal-notif-title').textContent = title || 'Admin Alert';
-    document.getElementById('modal-notif-msg').textContent = msg;
+    document.getElementById('modal-notif-msg').textContent = msg || '';
     modal.classList.add('active');
     audio.playWin();
-
-    // Store in notification history list
-    AppState.notificationsList = AppState.notificationsList || [];
-    AppState.notificationsList.unshift({
-        title: title || 'Admin Alert',
-        message: msg,
-        date: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-    });
-    localStorage.setItem('rewardzoo_notifs', JSON.stringify(AppState.notificationsList));
     updateNotifDot();
 }
 
@@ -214,25 +224,28 @@ function renderNotificationDrawerList() {
     const list = document.getElementById('notif-drawer-list');
     if (!list) return;
 
-    AppState.notificationsList = AppState.notificationsList || JSON.parse(localStorage.getItem('rewardzoo_notifs') || '[]');
+    const notifs = AppState.notificationsList || [];
 
     list.innerHTML = '';
-    if (AppState.notificationsList.length === 0) {
-        list.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px;">No notification history</div>`;
+    if (notifs.length === 0) {
+        list.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px;">No active notifications</div>`;
         return;
     }
 
-    AppState.notificationsList.forEach(n => {
+    notifs.forEach(n => {
         const item = document.createElement('div');
         item.style.background = 'rgba(255,255,255,0.05)';
         item.style.border = '1px solid rgba(255,255,255,0.1)';
         item.style.borderRadius = '12px';
         item.style.padding = '12px 14px';
+        item.style.marginBottom = '10px';
+
+        const dateStr = n.dateStr || (n.timestamp ? new Date(n.timestamp).toLocaleString() : '');
 
         item.innerHTML = `
             <div style="font-weight: 800; font-size: 14px; color: var(--text-main); margin-bottom: 4px;">📢 ${n.title}</div>
             <div style="font-size: 13px; color: var(--text-muted); line-height: 1.4;">${n.message}</div>
-            <div style="font-size: 11px; color: var(--accent-magenta); margin-top: 6px; text-align: right;">${n.date}</div>
+            <div style="font-size: 11px; color: var(--accent-magenta); margin-top: 6px; text-align: right;">${dateStr}</div>
         `;
         list.appendChild(item);
     });
@@ -240,7 +253,13 @@ function renderNotificationDrawerList() {
 
 function updateNotifDot() {
     const dot = document.getElementById('notif-bell-dot');
-    if (dot) dot.style.display = 'block';
+    if (dot) {
+        if (AppState.notificationsList && AppState.notificationsList.length > 0) {
+            dot.style.display = 'block';
+        } else {
+            dot.style.display = 'none';
+        }
+    }
 }
 
 // Load State from LocalStorage
