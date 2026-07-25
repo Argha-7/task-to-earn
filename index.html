@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Task ToDo Earn - Complete Tasks & Earn Rewards</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Firebase App & Realtime Database SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app-container">
+        
+        <!-- Telegram Mini App Simulated Header -->
+        <div class="tg-header-bar">
+            <button class="tg-btn-icon" id="btn-close-app" title="Close"><i class="fa-solid fa-xmark"></i></button>
+            <span class="tg-app-title">Task ToDo Earn</span>
+            <div class="tg-header-right">
+                <button class="tg-btn-icon"><i class="fa-solid fa-chevron-down"></i></button>
+                <button class="tg-btn-icon"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast">Reward claimed successfully!</div>
+
+        <!-- ==========================================
+             1. SPLASH SCREEN
+             ========================================== -->
+        <div id="splash-screen" class="screen active">
+            <div class="splash-logo-wrapper">
+                <svg class="splash-logo-img" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="200" height="200" rx="40" fill="#0c1033"/>
+                    <circle cx="100" cy="90" r="65" fill="#182359" />
+                    <rect x="65" y="55" width="70" height="50" rx="14" fill="#1b84ff"/>
+                    <path d="M 80 80 L 92 92 L 120 64" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="140" cy="95" r="16" fill="#ffb800" stroke="#fff" stroke-width="2"/>
+                    <text x="140" y="100" font-family="Outfit" font-weight="900" font-size="16" fill="#8a4d00" text-anchor="middle">$</text>
+                    <text x="100" y="138" font-family="Outfit" font-weight="900" font-size="20" fill="#ffffff" text-anchor="middle">Task ToDo</text>
+                    <text x="100" y="162" font-family="Outfit" font-weight="900" font-size="24" fill="#ffb800" text-anchor="middle">EARN</text>
+                    <text x="100" y="178" font-family="Outfit" font-weight="600" font-size="9" fill="#9a9ab0" text-anchor="middle">DO TASKS. EARN REWARDS.</text>
+                </svg>
+            </div>
+            <h1 class="splash-title">Task ToDo Earn</h1>
+            <div class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             2. LOGIN SCREEN
+             ========================================== -->
+        <div id="login-screen" class="screen">
+            <div class="auth-container">
+                <svg class="auth-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="200" height="200" rx="40" fill="#0c1033"/>
+                    <circle cx="100" cy="90" r="65" fill="#182359" />
+                    <rect x="65" y="55" width="70" height="50" rx="14" fill="#1b84ff"/>
+                    <path d="M 80 80 L 92 92 L 120 64" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="140" cy="95" r="16" fill="#ffb800" stroke="#fff" stroke-width="2"/>
+                    <text x="140" y="100" font-family="Outfit" font-weight="900" font-size="16" fill="#8a4d00" text-anchor="middle">$</text>
+                    <text x="100" y="138" font-family="Outfit" font-weight="900" font-size="20" fill="#ffffff" text-anchor="middle">Task ToDo</text>
+                    <text x="100" y="162" font-family="Outfit" font-weight="900" font-size="24" fill="#ffb800" text-anchor="middle">EARN</text>
+                </svg>
+                <div class="auth-header">
+                    <h2 class="auth-title">Welcome Back!</h2>
+                    <p class="auth-subtitle">Login to your account to continue</p>
+                </div>
+                <form id="form-login" style="width: 100%;">
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-envelope input-icon"></i>
+                            <input type="email" id="login-email" class="auth-input" placeholder="Email Address" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="login-password" class="auth-input" placeholder="Password" required>
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('login-password')">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <a class="forgot-link" onclick="handleForgotPassword()">Forgot Password?</a>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+                <div class="auth-footer">
+                    Don't have an account? <a onclick="switchAuthView('register-screen')">Register</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             3. REGISTER SCREEN
+             ========================================== -->
+        <div id="register-screen" class="screen">
+            <div class="auth-container">
+                <div class="auth-header" style="margin-top: 20px;">
+                    <h2 class="auth-title">Create Account</h2>
+                    <p class="auth-subtitle">Join Task ToDo Earn & start earning</p>
+                </div>
+                <form id="form-register" style="width: 100%;">
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-user input-icon"></i>
+                            <input type="text" id="reg-name" class="auth-input" placeholder="Full Name" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-envelope input-icon"></i>
+                            <input type="email" id="reg-email" class="auth-input" placeholder="Email Address" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="reg-password" class="auth-input" placeholder="Password" required>
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('reg-password')">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-shield-halved input-icon"></i>
+                            <input type="password" id="reg-confirm" class="auth-input" placeholder="Confirm Password" required>
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('reg-confirm')">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Sign Up</button>
+                </form>
+                <div class="auth-footer">
+                    Already have an account? <a onclick="switchAuthView('login-screen')">Login</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             SHARED APP HEADER BANNER
+             ========================================== -->
+        <div class="app-header-bar" id="main-app-header" style="display: none; padding: 16px 20px 0 20px;">
+            <div class="user-profile-summary">
+                <div class="avatar-frame">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="50" fill="#2c2c54"/>
+                        <circle cx="50" cy="40" r="22" fill="#e03bff"/>
+                        <path d="M 20 85 C 20 62, 80 62, 80 85 Z" fill="#e03bff"/>
+                    </svg>
+                </div>
+                <div class="user-meta-info">
+                    <span class="greeting-text">Hi,</span>
+                    <span class="username-heading" id="display-user-name">DSTechVerse</span>
+                    <span class="user-badge">TODO EARN MEMBER</span>
+                </div>
+            </div>
+            <div class="header-right-actions">
+                <div class="icon-circle-btn" onclick="openNotificationDrawer()">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="notification-dot" id="notif-bell-dot"></span>
+                </div>
+                <div class="coin-pill" onclick="navigateToTab('wallet-screen')">
+                    <span id="user-coin-balance">50</span>
+                    <div class="coin-icon"><i class="fa-solid fa-coins"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             4. DASHBOARD (HOME)
+             ========================================== -->
+        <div id="home-screen" class="screen">
+            <!-- Daily Check-in Card -->
+            <div class="daily-reward-card">
+                <div class="daily-reward-header">
+                    <div class="daily-reward-title">
+                        <i class="fa-regular fa-calendar-check"></i>
+                        <span>Daily Check-in</span>
+                    </div>
+                    <div class="reward-badge-pill">
+                        +20 <i class="fa-solid fa-coins" style="font-size: 11px;"></i>
+                    </div>
+                </div>
+                <p class="daily-reward-sub">Claim free coins every day!</p>
+                <button class="btn btn-primary" id="btn-claim-daily" onclick="claimDailyReward()">Claim Daily Reward</button>
+            </div>
+
+            <!-- Featured Games Section -->
+            <h3 class="section-title">Featured Games</h3>
+            <div class="tasks-grid">
+                <!-- Carrom Battle Card -->
+                <div class="task-card" onclick="startCarromGame()">
+                    <div class="task-icon-box icon-purple">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div class="task-info">
+                        <div class="task-name">Carrom Battle</div>
+                        <div class="task-desc">Pocket coins & win rewards</div>
+                    </div>
+                    <div class="task-reward-tag">
+                        +50 <i class="fa-solid fa-coins"></i>
+                    </div>
+                </div>
+
+                <!-- Color Game Card -->
+                <div class="task-card" onclick="startColorGame()">
+                    <div class="task-icon-box icon-teal">
+                        <i class="fa-solid fa-palette"></i>
+                    </div>
+                    <div class="task-info">
+                        <div class="task-name">Color Game</div>
+                        <div class="task-desc">Guess the right color</div>
+                    </div>
+                    <div class="task-reward-tag">
+                        +25 <i class="fa-solid fa-coins"></i>
+                    </div>
+                </div>
+
+                <!-- Lucky Spin Wheel Card -->
+                <div class="task-card" onclick="startSpinGame()">
+                    <div class="task-icon-box icon-red">
+                        <i class="fa-solid fa-dharmachakra"></i>
+                    </div>
+                    <div class="task-info">
+                        <div class="task-name">Lucky Spin Wheel</div>
+                        <div class="task-desc">Spin wheel to win bonus coins</div>
+                    </div>
+                    <div class="task-reward-tag">
+                        +100 <i class="fa-solid fa-coins"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Tasks Section -->
+            <h3 class="section-title">Dynamic Reward Tasks</h3>
+            <div class="tasks-grid" id="dynamic-tasks-grid">
+                <!-- Dynamically populated from Firebase -->
+            </div>
+        </div>
+
+        <!-- ==========================================
+             5. WALLET / WITHDRAW SCREEN
+             ========================================== -->
+        <div id="wallet-screen" class="screen">
+            <div class="subpage-top-bar">
+                <button class="btn-back" onclick="navigateToTab('home-screen')"><i class="fa-solid fa-arrow-left"></i> Back</button>
+            </div>
+
+            <!-- Available Balance Card -->
+            <div class="balance-card">
+                <div class="balance-label">AVAILABLE BALANCE</div>
+                <div class="balance-amount-row">
+                    <span class="balance-val" id="wallet-balance-val">50</span>
+                    <div class="coin-icon" style="width: 34px; height: 34px; font-size: 16px;"><i class="fa-solid fa-coins"></i></div>
+                </div>
+                <div class="conversion-badge">1000 Coins = ₹10</div>
+            </div>
+
+            <!-- Withdraw Form -->
+            <div class="withdraw-card">
+                <h3 class="withdraw-title">Withdraw Coins</h3>
+                <form id="form-withdraw" onsubmit="handleWithdrawal(event)">
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-coins input-icon" style="color: #ffc107;"></i>
+                            <input type="number" id="withdraw-amount" class="auth-input" placeholder="Enter Amount" min="100" required>
+                        </div>
+                    </div>
+                    <select id="withdraw-method" class="custom-select">
+                        <option value="UPI">UPI</option>
+                        <option value="Paytm">Paytm Wallet</option>
+                        <option value="PhonePe">PhonePe</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                    </select>
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-at input-icon"></i>
+                            <input type="text" id="withdraw-account" class="auth-input" placeholder="Enter UPI ID / Number" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Request Payout</button>
+                </form>
+            </div>
+
+            <!-- Recent Payout Requests -->
+            <h3 class="section-title" style="margin-top: 24px;">Payout Status</h3>
+            <div id="payout-requests-list" class="history-list">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- ==========================================
+             6. REFER & EARN SCREEN
+             ========================================== -->
+        <div id="refer-screen" class="screen">
+            <div class="subpage-top-bar">
+                <button class="btn-back" onclick="navigateToTab('home-screen')"><i class="fa-solid fa-arrow-left"></i> Back</button>
+            </div>
+
+            <div class="refer-hero-card">
+                <div class="refer-icon-circle">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <h2 class="refer-title">Refer & Earn</h2>
+                <p class="refer-sub">Get 100 coins for every friend!</p>
+            </div>
+
+            <div class="refer-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-label">INVITED</div>
+                    <div class="stat-card-val" id="refer-count">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">EARNED</div>
+                    <div class="stat-card-val" style="color: var(--coin-gold);" id="refer-earned">0 <i class="fa-solid fa-coins" style="font-size: 16px;"></i></div>
+                </div>
+            </div>
+
+            <div class="invite-code-box">
+                <div class="invite-code-label">Share your invite code</div>
+                <div class="code-field">
+                    <span id="invite-code-val">NSHK8R</span>
+                    <button class="btn-copy" onclick="copyInviteCode()"><i class="fa-regular fa-copy"></i></button>
+                </div>
+                <button class="btn btn-primary" onclick="shareReferralLink()">
+                    <i class="fa-solid fa-share-nodes"></i> Share Now
+                </button>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             7. HISTORY SCREEN
+             ========================================== -->
+        <div id="history-screen" class="screen">
+            <div class="subpage-top-bar">
+                <button class="btn-back" onclick="navigateToTab('home-screen')"><i class="fa-solid fa-arrow-left"></i> Back</button>
+            </div>
+
+            <div class="history-hero">
+                <h2 class="history-title">History</h2>
+                <p class="history-sub">Your recent coin transactions</p>
+            </div>
+
+            <div class="history-list" id="transaction-history-list">
+                <div class="history-item">
+                    <div class="history-item-left">
+                        <div class="history-icon"><i class="fa-solid fa-arrow-down-left"></i></div>
+                        <div class="history-item-info">
+                            <div class="history-item-title">Signup Bonus</div>
+                            <div class="history-item-date">1 Jun, 11:28 pm</div>
+                        </div>
+                    </div>
+                    <div class="history-item-val">+50</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             8. MY PROFILE SCREEN
+             ========================================== -->
+        <div id="profile-screen" class="screen">
+            <div class="subpage-top-bar">
+                <button class="btn-back" onclick="navigateToTab('home-screen')"><i class="fa-solid fa-arrow-left"></i> Back</button>
+            </div>
+
+            <div class="profile-card-large">
+                <div class="profile-avatar-xl">
+                    <i class="fa-solid fa-user" style="color: var(--accent-magenta);"></i>
+                </div>
+                <h2 class="profile-name-title" id="profile-name-val">DSTechVerse</h2>
+                <p class="profile-email-sub" id="profile-email-val">DSTechVerse@gmail.com</p>
+                <div class="earned-pill">TOTAL EARNED: <span id="profile-total-earned">50</span></div>
+            </div>
+
+            <div class="connect-box">
+                <div class="connect-title">CONNECT WITH US</div>
+                <button class="btn-telegram-icon" onclick="window.open('https://t.me', '_blank')">
+                    <i class="fa-paper-plane fa-solid"></i>
+                </button>
+            </div>
+
+            <button class="btn" style="background: rgba(255,61,113,0.15); color: var(--danger-red); border: 1px solid rgba(255,61,113,0.35); margin-top: 20px;" onclick="handleLogout()">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </div>
+
+        <!-- ==========================================
+             9. COLOR GAME MINI-GAME SCREEN
+             ========================================== -->
+        <div id="color-game-screen" class="screen">
+            <div class="subpage-top-bar">
+                <button class="btn-back" onclick="navigateToTab('home-screen')"><i class="fa-solid fa-arrow-left"></i> Exit Game</button>
+            </div>
+            <div class="game-container-card">
+                <h2>Color Guessing Game</h2>
+                <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Guess the matching color to win +25 Coins!</p>
+                
+                <div id="game-target-color" class="game-target-box" style="background-color: #9b2cff;"></div>
+                <div id="game-timer" style="font-size: 20px; font-weight: 800; color: var(--coin-gold); margin-bottom: 10px;">Time: 10s</div>
+
+                <div class="color-options-grid">
+                    <button class="btn-color-choice" style="background: #e74c3c;" onclick="checkColorChoice('#e74c3c')">Red</button>
+                    <button class="btn-color-choice" style="background: #2ecc71;" onclick="checkColorChoice('#2ecc71')">Green</button>
+                    <button class="btn-color-choice" style="background: #3498db;" onclick="checkColorChoice('#3498db')">Blue</button>
+                    <button class="btn-color-choice" style="background: #f1c40f;" onclick="checkColorChoice('#f1c40f')">Yellow</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             10. CARROM BATTLE MINI-GAME SCREEN
+             ========================================== -->
+        <div id="carrom-game-screen" class="screen">
+            <div class="subpage-top-bar">
+                <button class="btn-back" onclick="navigateToTab('home-screen')"><i class="fa-solid fa-arrow-left"></i> Exit Carrom</button>
+            </div>
+            <div class="game-container-card" style="padding: 16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:12px;">
+                    <div>
+                        <h2 style="font-size:18px;">Carrom Battle</h2>
+                        <span style="font-size:12px; color:var(--text-muted);">Pocket 3 coins to Win +50 Coins!</span>
+                    </div>
+                    <div style="background:rgba(255,193,7,0.15); color:var(--coin-gold); padding:6px 12px; border-radius:12px; font-weight:800; font-size:14px;">
+                        Score: <span id="carrom-score">0</span>/3
+                    </div>
+                </div>
+
+                <canvas id="carromCanvas" width="300" height="300" style="background:#2a1b0c; border:6px solid #5a3d1e; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.8); cursor:crosshair; touch-action:none;"></canvas>
+
+                <div style="margin-top:14px; width:100%; text-align:center;">
+                    <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Drag Striker to Aim & Release to Shoot!</div>
+                    <button class="btn btn-primary" id="btn-carrom-reset" onclick="initCarromBoard()">Reset Board</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             10. TASK SIMULATION MODAL
+             ========================================== -->
+        <div class="modal-overlay" id="task-modal">
+            <div class="modal-box">
+                <h3 id="modal-task-title" style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">Watch & Earn</h3>
+                <p id="modal-task-desc" style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Watch the advertisement for 15 seconds to claim your reward.</p>
+                <div id="modal-timer-box" style="font-size: 32px; font-weight: 900; color: var(--accent-magenta); margin-bottom: 20px;">15s</div>
+                <button class="btn btn-primary" id="btn-claim-task-reward" disabled onclick="completeTaskReward()">Please Wait...</button>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             11. IN-APP NOTIFICATION POPUP MODAL
+             ========================================== -->
+        <div class="modal-overlay" id="notification-modal">
+            <div class="modal-box" style="text-align: center; border: 1px solid rgba(224, 59, 255, 0.4);">
+                <div style="width: 54px; height: 54px; background: rgba(224, 59, 255, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto; color: var(--accent-magenta); font-size: 24px;">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <h3 id="modal-notif-title" style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">Admin Message</h3>
+                <p id="modal-notif-msg" style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5;">You have received a new notification from Admin.</p>
+                <button class="btn btn-primary" onclick="closeNotificationModal()">Got It!</button>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             12. LUCKY SPIN WHEEL GAME SCREEN
+             ========================================== -->
+        <div id="spin-game-screen" class="screen">
+            <div class="subpage-top-bar">
+                <button class="btn-back" onclick="navigateToTab('home-screen')"><i class="fa-solid fa-arrow-left"></i> Exit Spin</button>
+            </div>
+            <div class="game-container-card" style="padding: 20px; text-align: center;">
+                <h2>Lucky Spin Wheel</h2>
+                <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px; margin-bottom: 20px;">Spin the wheel to win up to 100 Bonus Coins!</p>
+
+                <div style="position: relative; width: 240px; height: 240px; margin: 0 auto 24px auto;">
+                    <div id="spin-wheel-circle" style="width: 100%; height: 100%; border-radius: 50%; border: 6px solid #e03bff; background: conic-gradient(#9b2cff 0deg 45deg, #e03bff 45deg 90deg, #ffc107 90deg 135deg, #00e676 135deg 180deg, #3498db 180deg 225deg, #e74c3c 225deg 270deg, #f1c40f 270deg 315deg, #8a2be2 315deg 360deg); box-shadow: 0 10px 30px rgba(224,59,255,0.4); transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1.0); position: relative;"></div>
+                    <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 24px solid #ffffff; z-index: 10;"></div>
+                </div>
+
+                <button class="btn btn-primary" id="btn-spin-wheel" onclick="spinLuckyWheel()">SPIN NOW!</button>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             13. NOTIFICATION HISTORY DRAWER MODAL
+             ========================================== -->
+        <div class="modal-overlay" id="notif-drawer-modal">
+            <div class="modal-box" style="max-height: 80vh; display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 style="font-size: 18px; font-weight: 800;"><i class="fa-solid fa-bell" style="color: var(--accent-magenta); margin-right: 8px;"></i> Notification Center</h3>
+                    <button class="btn-close-modal" onclick="closeNotificationDrawer()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="notif-drawer-list" style="overflow-y: auto; flex: 1; text-align: left; display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Dynamically populated notifications -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             11. BOTTOM NAVIGATION BAR
+             ========================================== -->
+        <div class="bottom-nav-bar" id="main-bottom-nav" style="display: none;">
+            <div class="nav-item" id="nav-refer" onclick="navigateToTab('refer-screen')">
+                <i class="fa-solid fa-user-group"></i>
+                <span class="nav-dot"></span>
+            </div>
+            <div class="nav-item" id="nav-wallet" onclick="navigateToTab('wallet-screen')">
+                <i class="fa-solid fa-wallet"></i>
+                <span class="nav-dot"></span>
+            </div>
+            <div class="nav-item nav-item-center active" id="nav-home" onclick="navigateToTab('home-screen')">
+                <i class="fa-solid fa-house"></i>
+                <span class="nav-dot"></span>
+            </div>
+            <div class="nav-item" id="nav-history" onclick="navigateToTab('history-screen')">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span class="nav-dot"></span>
+            </div>
+            <div class="nav-item" id="nav-profile" onclick="navigateToTab('profile-screen')">
+                <i class="fa-solid fa-user"></i>
+                <span class="nav-dot"></span>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

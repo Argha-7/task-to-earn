@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task ToDo Earn - Master Admin Panel</title>
+    <!-- Firebase App & Realtime Database SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="admin-sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-square-check" style="color: var(--accent-magenta);"></i>
+            <span>Task ToDo Earn</span>
+        </div>
+
+        <div class="sidebar-menu">
+            <a class="menu-item active" onclick="switchAdminTab('sec-dashboard', this)">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Dashboard</span>
+            </a>
+            <a class="menu-item" onclick="switchAdminTab('sec-users', this)">
+                <i class="fa-solid fa-users"></i>
+                <span>Manage Users</span>
+            </a>
+            <a class="menu-item" onclick="switchAdminTab('sec-tasks', this)">
+                <i class="fa-solid fa-tasks"></i>
+                <span>Manage Tasks</span>
+            </a>
+            <a class="menu-item" onclick="switchAdminTab('sec-payouts', this)">
+                <i class="fa-solid fa-money-bill-transfer"></i>
+                <span>Payout Requests</span>
+            </a>
+            <a class="menu-item" onclick="switchAdminTab('sec-alerts', this)">
+                <i class="fa-solid fa-bell"></i>
+                <span>Send Alerts</span>
+            </a>
+            <a class="menu-item" onclick="switchAdminTab('sec-controls', this)">
+                <i class="fa-solid fa-sliders"></i>
+                <span>App Controls</span>
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <button class="btn-logout-admin" onclick="alert('Logged out from Task ToDo Earn Admin Panel')">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Panel -->
+    <div class="admin-main">
+        <div class="admin-header">
+            <div class="admin-header-title" id="admin-page-title">Dashboard Overview</div>
+            <div class="admin-user-pill">
+                <i class="fa-solid fa-user-shield" style="color: var(--accent-magenta);"></i>
+                <span>Administrator</span>
+            </div>
+        </div>
+
+        <!-- 1. DASHBOARD OVERVIEW SECTION -->
+        <div id="sec-dashboard" class="admin-section active">
+            <div class="stats-cards-grid">
+                <div class="admin-card">
+                    <div class="stat-label">Total Registered Users</div>
+                    <div class="stat-number" id="stat-total-users">0</div>
+                </div>
+                <div class="admin-card">
+                    <div class="stat-label">Total Coins Issued</div>
+                    <div class="stat-number" id="stat-total-coins" style="color: var(--warning-yellow);">0</div>
+                </div>
+                <div class="admin-card">
+                    <div class="stat-label">Pending Payout Requests</div>
+                    <div class="stat-number" id="stat-pending-payouts" style="color: var(--accent-magenta);">0</div>
+                </div>
+                <div class="admin-card">
+                    <div class="stat-label">Active Reward Tasks</div>
+                    <div class="stat-number" id="stat-total-tasks" style="color: var(--success-green);">0</div>
+                </div>
+            </div>
+
+            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 16px;">Recent Withdrawal Activity</h3>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User Name</th>
+                            <th>Payment Method</th>
+                            <th>Account / UPI</th>
+                            <th>Coins</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboard-recent-payouts">
+                        <!-- Dynamically populated -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 2. MANAGE USERS SECTION -->
+        <div id="sec-users" class="admin-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="font-size: 18px; font-weight: 800;">Registered Users Database</h3>
+                <input type="text" id="user-search-input" class="admin-input" placeholder="Search user by email or name..." style="width: 250px; margin-bottom: 0;" oninput="filterUserTable()">
+            </div>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User Name</th>
+                            <th>Email / Telegram</th>
+                            <th>Coin Balance</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-users-list">
+                        <!-- Dynamically populated -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3. MANAGE TASKS SECTION -->
+        <div id="sec-tasks" class="admin-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="font-size: 18px; font-weight: 800;">Dynamic Reward Tasks Management</h3>
+                <button class="btn-admin-submit" style="width: auto; padding: 10px 20px;" onclick="openTaskModal()">
+                    <i class="fa-solid fa-plus" style="margin-right: 6px;"></i> Add New Task
+                </button>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Icon / Image</th>
+                            <th>Task Title</th>
+                            <th>Description</th>
+                            <th>Reward</th>
+                            <th>Type & Timer</th>
+                            <th>Action Link</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-tasks-table">
+                        <!-- Dynamically populated from Firebase -->
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="font-size: 18px; font-weight: 800; margin: 30px 0 16px 0;">User Task Completions & Audit Log</h3>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User Name</th>
+                            <th>Email / Telegram</th>
+                            <th>Task Title</th>
+                            <th>Reward Earned</th>
+                            <th>Date & Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-task-logs-table">
+                        <!-- Dynamically populated from Firebase -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. PAYOUT REQUESTS SECTION -->
+        <div id="sec-payouts" class="admin-section">
+            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 16px;">Withdrawal Payout Requests</h3>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>User</th>
+                            <th>Method</th>
+                            <th>Account / UPI</th>
+                            <th>Amount (Coins)</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-payouts-table">
+                        <!-- Dynamically populated -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 5. SEND ALERTS SECTION -->
+        <div id="sec-alerts" class="admin-section">
+            <div class="admin-card" style="max-width: 600px;">
+                <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;">Send Targeted / Broadcast Notification</h3>
+                <form id="form-send-alert" onsubmit="handleNotificationSubmit(event)">
+                    <div class="admin-form-group">
+                        <label class="admin-label">Target Audience</label>
+                        <select id="alert-target-user" class="admin-input" required>
+                            <option value="ALL">📢 Broadcast to ALL Users</option>
+                            <!-- Dynamically populated with user emails -->
+                        </select>
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-label">Alert Title</label>
+                        <input type="text" id="alert-title" class="admin-input" placeholder="e.g. Special Bonus Credited!" required>
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-label">Notification Message</label>
+                        <textarea id="alert-msg" class="admin-input" style="height: 100px; padding: 12px;" placeholder="Type your message here..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-admin-submit">Send Notification</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 6. APP CONTROLS SECTION -->
+        <div id="sec-controls" class="admin-section">
+            <div class="admin-card" style="max-width: 600px;">
+                <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;">Reward & Game Economy Configuration</h3>
+                <form onsubmit="saveAppControls(event)">
+                    <div class="admin-form-group">
+                        <label class="admin-label">Carrom Battle Entry Fee (Coins)</label>
+                        <input type="number" id="ctrl-carrom-fee" class="admin-input" value="20" required>
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-label">Carrom Battle Winning Reward (Coins)</label>
+                        <input type="number" id="ctrl-carrom-win" class="admin-input" value="50" required>
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-label">Daily Check-in Reward (Coins)</label>
+                        <input type="number" id="ctrl-daily-reward" class="admin-input" value="20" required>
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-label">Minimum Withdrawal Threshold (Coins)</label>
+                        <input type="number" id="ctrl-min-withdraw" class="admin-input" value="100" required>
+                    </div>
+                    <button type="submit" class="btn-admin-submit">Save Settings</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL: ADD / EDIT TASK -->
+    <div id="modal-task-editor" class="admin-modal-overlay">
+        <div class="admin-modal-card">
+            <div class="admin-modal-header">
+                <h3 id="modal-editor-title">Add New Task</h3>
+                <button class="btn-close-modal" onclick="closeTaskModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-task-editor" onsubmit="saveTaskSubmit(event)">
+                <input type="hidden" id="task-edit-id">
+                
+                <div class="admin-form-group">
+                    <label class="admin-label">Task Title</label>
+                    <input type="text" id="task-edit-title" class="admin-input" placeholder="e.g. Subscribe Official YouTube" required>
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-label">Description / Instructions</label>
+                    <input type="text" id="task-edit-desc" class="admin-input" placeholder="e.g. Watch for 15s and subscribe channel" required>
+                </div>
+                <div class="admin-form-group" style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label class="admin-label">Reward Coins</label>
+                        <input type="number" id="task-edit-coins" class="admin-input" value="30" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="admin-label">Timer (Seconds)</label>
+                        <input type="number" id="task-edit-timer" class="admin-input" value="15" required>
+                    </div>
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-label">Task Category / Type</label>
+                    <select id="task-edit-type" class="admin-input">
+                        <option value="social">Social Media Task (Telegram/YouTube/Insta)</option>
+                        <option value="view">Visit Website / Link</option>
+                        <option value="watch">Watch Video Ad</option>
+                    </select>
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-label">Image or Icon URL</label>
+                    <input type="text" id="task-edit-icon" class="admin-input" placeholder="e.g. https://img.icons8.com/color/96/youtube-play.png or fa-brands fa-youtube">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-label">Action Target URL (Link to open)</label>
+                    <input type="url" id="task-edit-url" class="admin-input" placeholder="e.g. https://youtube.com/@yourchannel">
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" class="btn-act btn-reject" onclick="closeTaskModal()">Cancel</button>
+                    <button type="submit" class="btn-admin-submit" style="width: auto; padding: 10px 24px;">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT USER COINS -->
+    <div id="modal-user-edit" class="admin-modal-overlay">
+        <div class="admin-modal-card" style="max-width: 420px;">
+            <div class="admin-modal-header">
+                <h3>Edit User Coins</h3>
+                <button class="btn-close-modal" onclick="closeUserEditModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveUserCoinsSubmit(event)">
+                <input type="hidden" id="user-edit-email">
+                <div class="admin-form-group">
+                    <label class="admin-label">User Email / Telegram</label>
+                    <input type="text" id="user-edit-display-email" class="admin-input" readonly style="opacity: 0.7;">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-label">New Coin Balance</label>
+                    <input type="number" id="user-edit-new-coins" class="admin-input" required>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" class="btn-act btn-reject" onclick="closeUserEditModal()">Cancel</button>
+                    <button type="submit" class="btn-admin-submit" style="width: auto; padding: 10px 24px;">Update Balance</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
