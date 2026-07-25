@@ -264,7 +264,7 @@
                             <option value="disabled">🔴 Disabled (Hidden from Users)</option>
                         </select>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
                         <div class="admin-form-group">
                             <label class="admin-label">Entry Fee (Coins)</label>
                             <input type="number" id="ctrl-carrom-fee" class="admin-input" value="20" required>
@@ -272,6 +272,14 @@
                         <div class="admin-form-group">
                             <label class="admin-label">Winning Prize (Coins)</label>
                             <input type="number" id="ctrl-carrom-win" class="admin-input" value="50" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-label">Bot Difficulty</label>
+                            <select id="ctrl-carrom-diff" class="admin-input">
+                                <option value="easy">🟢 Easy (Bot misses often)</option>
+                                <option value="normal" selected>🟡 Normal (Balanced)</option>
+                                <option value="hard">🔴 Hard (Master AI Bot)</option>
+                            </select>
                         </div>
                     </div>
 
@@ -282,7 +290,7 @@
                             <option value="disabled">🔴 Disabled (Hidden from Users)</option>
                         </select>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
                         <div class="admin-form-group">
                             <label class="admin-label">Entry Fee (Coins)</label>
                             <input type="number" id="ctrl-ttt-fee" class="admin-input" value="10" required>
@@ -290,6 +298,14 @@
                         <div class="admin-form-group">
                             <label class="admin-label">Winning Prize (Coins)</label>
                             <input type="number" id="ctrl-ttt-win" class="admin-input" value="25" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-label">Bot Difficulty</label>
+                            <select id="ctrl-ttt-diff" class="admin-input">
+                                <option value="easy">🟢 Easy (Random Moves)</option>
+                                <option value="normal" selected>🟡 Normal (Moderate)</option>
+                                <option value="hard">🔴 Hard (Unbeatable Bot)</option>
+                            </select>
                         </div>
                     </div>
 
