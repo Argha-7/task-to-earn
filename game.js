@@ -120,19 +120,14 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     setupStorageSyncListener();
     renderAllViews();
+    showMainInterface();
+    navigateToTab('home-screen');
 
     // Splash Screen Transition
     setTimeout(() => {
         const splash = document.getElementById('splash-screen');
         if (splash) splash.classList.remove('active');
-        
-        if (AppState.user) {
-            showMainInterface();
-            navigateToTab('home-screen');
-        } else {
-            showAuthView('login-screen');
-        }
-    }, 2000);
+    }, 1200);
 });
 
 // Real-Time Cross Window & Firebase Synchronization Listener
