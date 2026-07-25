@@ -127,14 +127,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (header) header.style.display = 'none';
     if (nav) nav.style.display = 'none';
 
-    // Splash Screen Transition (1.5 seconds)
+    // Lightning Fast Splash Screen Transition (0.4 seconds)
     setTimeout(() => {
         const splash = document.getElementById('splash-screen');
         if (splash) splash.classList.remove('active');
         
         showMainInterface();
         navigateToTab('home-screen');
-    }, 1500);
+    }, 400);
 });
 
 // Real-Time Cross Window & Firebase Synchronization Listener

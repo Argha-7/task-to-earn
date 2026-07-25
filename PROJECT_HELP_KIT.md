@@ -80,4 +80,4 @@ When adding new features or modifying code, always verify:
 
 ## 📝 4. Revision History
 
-- **2026-07-25:** Created `PROJECT_HELP_KIT.md`. Added interactive 2D Carrom Board mini-game physics engine (`startCarromBattleGame`, baseline striker slider, drag/aim controls, puck bounce physics, corner pocket detection), full Battle Arena, Tic-Tac-Toe, Online/Bot matchmaking, Telegram Ads hook, Admin Game status toggles, centered floating HOME navigation bar, and fixed splash screen loading interface isolation.
+- **2026-07-25:** Created `PROJECT_HELP_KIT.md`. Added interactive 2D Carrom Board mini-game physics engine (`startCarromBattleGame`), full Battle Arena, Tic-Tac-Toe, Online/Bot matchmaking, Telegram Ads hook, Admin Game status toggles, centered floating HOME navigation bar, fixed splash screen loading interface isolation, and optimized splash launch transition delay to 400ms for lightning-fast instant opening.
