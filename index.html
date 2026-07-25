@@ -151,7 +151,7 @@
         <!-- ==========================================
              SHARED APP HEADER BANNER
              ========================================== -->
-        <div class="app-header-bar" id="main-app-header" style="display: flex; padding: 16px 20px 0 20px;">
+        <div class="app-header-bar" id="main-app-header" style="display: none; padding: 16px 20px 0 20px;">
             <div class="user-profile-summary">
                 <div class="avatar-frame">
                     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -533,31 +533,42 @@
                 <button class="btn-back" onclick="navigateToTab('battle-screen')"><i class="fa-solid fa-arrow-left"></i> Exit Carrom</button>
             </div>
 
-            <div class="game-container-card" style="padding: 20px; text-align: center; max-width: 380px; margin: 0 auto;">
-                <h2 style="font-size: 20px; font-weight: 900; margin-bottom: 4px;">🏆 Carrom Board Arena</h2>
-                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Pocket coins to score points and win the battle!</p>
+            <div class="game-container-card" style="padding: 16px; text-align: center; max-width: 380px; margin: 0 auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h2 style="font-size: 18px; font-weight: 900;">🏆 Carrom Board Arena</h2>
+                    <span id="carrom-turn-indicator" style="font-size: 11px; font-weight: 800; background: rgba(0, 210, 211, 0.2); color: #00d2d3; padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(0, 210, 211, 0.4);">YOUR TURN</span>
+                </div>
 
                 <!-- Score Board -->
-                <div style="display: flex; justify-content: space-between; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 10px 16px; margin-bottom: 16px; border: 1px solid var(--border-color);">
-                    <div>
-                        <div style="font-size: 11px; color: var(--text-muted);">YOUR SCORE</div>
-                        <div id="carrom-user-score" style="font-size: 22px; font-weight: 900; color: #00d2d3;">0</div>
+                <div style="display: flex; justify-content: space-between; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 8px 14px; margin-bottom: 12px; border: 1px solid var(--border-color);">
+                    <div style="text-align: left;">
+                        <div style="font-size: 10px; color: var(--text-muted); font-weight: 700;">YOUR SCORE</div>
+                        <div id="carrom-user-score" style="font-size: 20px; font-weight: 900; color: #00d2d3;">0</div>
+                    </div>
+                    <div style="text-align: center; font-size: 11px; color: var(--text-muted); align-self: center;">
+                        TARGET: 30 PTS
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 11px; color: var(--text-muted);">OPPONENT SCORE</div>
-                        <div id="carrom-opp-score" style="font-size: 22px; font-weight: 900; color: #ff5252;">0</div>
+                        <div style="font-size: 10px; color: var(--text-muted); font-weight: 700;">OPPONENT</div>
+                        <div id="carrom-opp-score" style="font-size: 20px; font-weight: 900; color: #ff5252;">0</div>
                     </div>
                 </div>
 
-                <!-- Carrom Canvas / Interactive Board -->
+                <!-- Interactive Canvas Board -->
                 <div class="carrom-board-wrapper">
                     <canvas id="carrom-canvas" width="300" height="300"></canvas>
                 </div>
 
-                <!-- Striker Control Actions -->
-                <div style="display: flex; gap: 10px; margin-top: 16px;">
-                    <button class="btn btn-primary" id="btn-carrom-strike" onclick="strikeCarromPuck()" style="flex: 1;">
-                        <i class="fa-solid fa-bullseye"></i> Strike Puck!
+                <!-- Striker Position & Aim Controls -->
+                <div style="margin-top: 12px; background: rgba(255,255,255,0.04); border-radius: 14px; padding: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">
+                        <span>Striker Position (Baseline):</span>
+                        <span id="carrom-pos-val">Center</span>
+                    </div>
+                    <input type="range" id="carrom-striker-slider" min="50" max="250" value="150" style="width: 100%; accent-color: var(--accent-magenta); margin-bottom: 12px;" oninput="updateCarromStrikerPos(this.value)">
+
+                    <button class="btn btn-primary" id="btn-carrom-shoot" onclick="shootCarromStriker()" style="width: 100%; height: 48px; font-size: 15px;">
+                        <i class="fa-solid fa-bullseye"></i> Shoot Striker Forward!
                     </button>
                 </div>
             </div>
@@ -693,7 +704,7 @@
         <!-- ==========================================
              11. BOTTOM NAVIGATION BAR
              ========================================== -->
-        <div class="bottom-nav-bar" id="main-bottom-nav">
+        <div class="bottom-nav-bar" id="main-bottom-nav" style="display: none;">
             <div class="nav-item" id="nav-battle" onclick="navigateToTab('battle-screen')">
                 <i class="fa-solid fa-gamepad"></i>
                 <span>Battle</span>
