@@ -10,6 +10,7 @@ let globalNotifications = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     initAdminListeners();
+    loadAppControls();
 });
 
 function initAdminListeners() {
@@ -526,17 +527,50 @@ function handlePayoutAction(payoutId, status, userEmail, amount) {
 
 function saveAppControls(e) {
     e.preventDefault();
-    const carromFee = document.getElementById('ctrl-carrom-fee').value;
-    const carromWin = document.getElementById('ctrl-carrom-win').value;
+    const settings = {
+        carromFee: parseInt(document.getElementById('ctrl-carrom-fee').value, 10) || 20,
+        carromWin: parseInt(document.getElementById('ctrl-carrom-win').value, 10) || 50,
+        tttFee: parseInt(document.getElementById('ctrl-ttt-fee').value, 10) || 10,
+        tttWin: parseInt(document.getElementById('ctrl-ttt-win').value, 10) || 25,
+        colorFee: parseInt(document.getElementById('ctrl-color-fee').value, 10) || 15,
+        colorWin: parseInt(document.getElementById('ctrl-color-win').value, 10) || 35,
+        spinFee: parseInt(document.getElementById('ctrl-spin-fee').value, 10) || 25,
+        spinWin: parseInt(document.getElementById('ctrl-spin-win').value, 10) || 60,
+        missionReward: parseInt(document.getElementById('ctrl-mission-reward').value, 10) || 20,
+        dailyReward: parseInt(document.getElementById('ctrl-daily-reward').value, 10) || 20,
+        minWithdraw: parseInt(document.getElementById('ctrl-min-withdraw').value, 10) || 100
+    };
 
     if (typeof DatabaseAPI !== 'undefined' && db) {
-        db.ref('app_settings').set({
-            carromEntryFee: parseInt(carromFee, 10),
-            carromReward: parseInt(carromWin, 10),
-            dailyReward: parseInt(document.getElementById('ctrl-daily-reward').value, 10),
-            minWithdraw: parseInt(document.getElementById('ctrl-min-withdraw').value, 10)
-        });
+        db.ref('app_settings').set(settings);
     }
+    localStorage.setItem('todoearn_app_settings', JSON.stringify(settings));
+    alert('⚔️ Game Arena & Reward Economy settings saved successfully!');
+}
 
-    alert('App & Game Configuration saved successfully!');
+function loadAppControls() {
+    const renderControls = (settings) => {
+        if (!settings) return;
+        if (document.getElementById('ctrl-carrom-fee')) document.getElementById('ctrl-carrom-fee').value = settings.carromFee || 20;
+        if (document.getElementById('ctrl-carrom-win')) document.getElementById('ctrl-carrom-win').value = settings.carromWin || 50;
+        if (document.getElementById('ctrl-ttt-fee')) document.getElementById('ctrl-ttt-fee').value = settings.tttFee || 10;
+        if (document.getElementById('ctrl-ttt-win')) document.getElementById('ctrl-ttt-win').value = settings.tttWin || 25;
+        if (document.getElementById('ctrl-color-fee')) document.getElementById('ctrl-color-fee').value = settings.colorFee || 15;
+        if (document.getElementById('ctrl-color-win')) document.getElementById('ctrl-color-win').value = settings.colorWin || 35;
+        if (document.getElementById('ctrl-spin-fee')) document.getElementById('ctrl-spin-fee').value = settings.spinFee || 25;
+        if (document.getElementById('ctrl-spin-win')) document.getElementById('ctrl-spin-win').value = settings.spinWin || 60;
+        if (document.getElementById('ctrl-mission-reward')) document.getElementById('ctrl-mission-reward').value = settings.missionReward || 20;
+        if (document.getElementById('ctrl-daily-reward')) document.getElementById('ctrl-daily-reward').value = settings.dailyReward || 20;
+        if (document.getElementById('ctrl-min-withdraw')) document.getElementById('ctrl-min-withdraw').value = settings.minWithdraw || 100;
+    };
+
+    if (typeof DatabaseAPI !== 'undefined' && db) {
+        db.ref('app_settings').on('value', (snapshot) => {
+            const val = snapshot.val();
+            if (val) renderControls(val);
+        });
+    } else {
+        const saved = localStorage.getItem('todoearn_app_settings');
+        if (saved) renderControls(JSON.parse(saved));
+    }
 }

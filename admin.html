@@ -254,26 +254,77 @@
 
         <!-- 6. APP CONTROLS SECTION -->
         <div id="sec-controls" class="admin-section">
-            <div class="admin-card" style="max-width: 600px;">
-                <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;">Reward & Game Economy Configuration</h3>
+            <div class="admin-card" style="max-width: 650px;">
+                <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;">⚔️ Game Arena & Reward Economy Controls</h3>
                 <form onsubmit="saveAppControls(event)">
-                    <div class="admin-form-group">
-                        <label class="admin-label">Carrom Battle Entry Fee (Coins)</label>
-                        <input type="number" id="ctrl-carrom-fee" class="admin-input" value="20" required>
+                    <h4 style="font-size: 14px; font-weight: 800; color: var(--accent-magenta); margin-bottom: 12px;">Carrom Battle</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div class="admin-form-group">
+                            <label class="admin-label">Entry Fee (Coins)</label>
+                            <input type="number" id="ctrl-carrom-fee" class="admin-input" value="20" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-label">Winning Prize (Coins)</label>
+                            <input type="number" id="ctrl-carrom-win" class="admin-input" value="50" required>
+                        </div>
                     </div>
-                    <div class="admin-form-group">
-                        <label class="admin-label">Carrom Battle Winning Reward (Coins)</label>
-                        <input type="number" id="ctrl-carrom-win" class="admin-input" value="50" required>
+
+                    <h4 style="font-size: 14px; font-weight: 800; color: #ff9f43; margin-bottom: 12px;">Tic-Tac-Toe (Tik Tak) Arena</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div class="admin-form-group">
+                            <label class="admin-label">Entry Fee (Coins)</label>
+                            <input type="number" id="ctrl-ttt-fee" class="admin-input" value="10" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-label">Winning Prize (Coins)</label>
+                            <input type="number" id="ctrl-ttt-win" class="admin-input" value="25" required>
+                        </div>
                     </div>
-                    <div class="admin-form-group">
-                        <label class="admin-label">Daily Check-in Reward (Coins)</label>
-                        <input type="number" id="ctrl-daily-reward" class="admin-input" value="20" required>
+
+                    <h4 style="font-size: 14px; font-weight: 800; color: #00d2d3; margin-bottom: 12px;">Color Guess Arena</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div class="admin-form-group">
+                            <label class="admin-label">Entry Fee (Coins)</label>
+                            <input type="number" id="ctrl-color-fee" class="admin-input" value="15" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-label">Winning Prize (Coins)</label>
+                            <input type="number" id="ctrl-color-win" class="admin-input" value="35" required>
+                        </div>
                     </div>
+
+                    <h4 style="font-size: 14px; font-weight: 800; color: var(--danger-red); margin-bottom: 12px;">Lucky Spin Battle</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div class="admin-form-group">
+                            <label class="admin-label">Entry Fee (Coins)</label>
+                            <input type="number" id="ctrl-spin-fee" class="admin-input" value="25" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-label">Winning Prize (Coins)</label>
+                            <input type="number" id="ctrl-spin-win" class="admin-input" value="60" required>
+                        </div>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 16px 0;">
+
+                    <h4 style="font-size: 14px; font-weight: 800; color: var(--warning-yellow); margin-bottom: 12px;">Daily Missions & Withdrawal Limits</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div class="admin-form-group">
+                            <label class="admin-label">3-Battle Mission Reward (Coins)</label>
+                            <input type="number" id="ctrl-mission-reward" class="admin-input" value="20" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-label">Daily Check-in Reward (Coins)</label>
+                            <input type="number" id="ctrl-daily-reward" class="admin-input" value="20" required>
+                        </div>
+                    </div>
+
                     <div class="admin-form-group">
                         <label class="admin-label">Minimum Withdrawal Threshold (Coins)</label>
                         <input type="number" id="ctrl-min-withdraw" class="admin-input" value="100" required>
                     </div>
-                    <button type="submit" class="btn-admin-submit">Save Settings</button>
+
+                    <button type="submit" class="btn-admin-submit">Save Arena Settings</button>
                 </form>
             </div>
         </div>
