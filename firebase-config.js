@@ -384,5 +384,18 @@ const DatabaseAPI = {
             list.sort((a, b) => (b.battlesWon || 0) - (a.battlesWon || 0) || (b.coinsEarned || 0) - (a.coinsEarned || 0));
             if (callback) callback(list);
         }
+    },
+
+    // Real-Time Global App Controls & Game Active/Disabled Status Listener
+    listenAppSettings: function(callback) {
+        if (isFirebaseConnected && db) {
+            db.ref('app_settings').on('value', (snapshot) => {
+                const settings = snapshot.val();
+                if (callback) callback(settings);
+            });
+        } else {
+            const settings = JSON.parse(localStorage.getItem('todoearn_app_settings') || 'null');
+            if (callback) callback(settings);
+        }
     }
 };

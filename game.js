@@ -121,6 +121,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setupEventListeners();
         setupStorageSyncListener();
 
+        const initialSettings = JSON.parse(localStorage.getItem('todoearn_app_settings') || 'null');
+        if (initialSettings) applyAppSettings(initialSettings);
+
         showMainInterface();
         renderAllViews();
     } catch (err) {
@@ -156,6 +159,10 @@ function setupStorageSyncListener() {
 
         DatabaseAPI.listenAllTasks((tasks) => {
             renderDynamicTasks(tasks);
+        });
+
+        DatabaseAPI.listenAppSettings((settings) => {
+            applyAppSettings(settings);
         });
 
         let knownNotifIds = new Set();
@@ -229,6 +236,70 @@ function renderDynamicTasks(tasks) {
         `;
         container.appendChild(card);
     });
+}
+
+function applyAppSettings(settings) {
+    if (!settings) return;
+
+    // Carrom Control
+    const carromCard = document.getElementById('card-battle-carrom');
+    const carromDesc = document.getElementById('desc-battle-carrom');
+    if (carromCard) {
+        if (settings.carromStatus === 'disabled') {
+            carromCard.style.display = 'none';
+        } else {
+            carromCard.style.display = 'flex';
+        }
+    }
+    if (carromDesc && carromCard) {
+        carromDesc.textContent = `Entry: ${settings.carromFee || 20} Coins | Win: ${settings.carromWin || 50} Coins`;
+        carromCard.setAttribute('onclick', `startBattle('carrom', ${settings.carromFee || 20}, ${settings.carromWin || 50})`);
+    }
+
+    // Tic-Tac-Toe Control
+    const tttCard = document.getElementById('card-battle-tictactoe');
+    const tttDesc = document.getElementById('desc-battle-tictactoe');
+    if (tttCard) {
+        if (settings.tttStatus === 'disabled') {
+            tttCard.style.display = 'none';
+        } else {
+            tttCard.style.display = 'flex';
+        }
+    }
+    if (tttDesc && tttCard) {
+        tttDesc.textContent = `Entry: ${settings.tttFee || 10} Coins | Win: ${settings.tttWin || 25} Coins`;
+        tttCard.setAttribute('onclick', `startBattle('tictactoe', ${settings.tttFee || 10}, ${settings.tttWin || 25})`);
+    }
+
+    // Color Game Control
+    const colorCard = document.getElementById('card-battle-color');
+    const colorDesc = document.getElementById('desc-battle-color');
+    if (colorCard) {
+        if (settings.colorStatus === 'disabled') {
+            colorCard.style.display = 'none';
+        } else {
+            colorCard.style.display = 'flex';
+        }
+    }
+    if (colorDesc && colorCard) {
+        colorDesc.textContent = `Entry: ${settings.colorFee || 15} Coins | Win: ${settings.colorWin || 35} Coins`;
+        colorCard.setAttribute('onclick', `startBattle('color', ${settings.colorFee || 15}, ${settings.colorWin || 35})`);
+    }
+
+    // Lucky Spin Control
+    const spinCard = document.getElementById('card-battle-spin');
+    const spinDesc = document.getElementById('desc-battle-spin');
+    if (spinCard) {
+        if (settings.spinStatus === 'disabled') {
+            spinCard.style.display = 'none';
+        } else {
+            spinCard.style.display = 'flex';
+        }
+    }
+    if (spinDesc && spinCard) {
+        spinDesc.textContent = `Entry: ${settings.spinFee || 25} Coins | Win: ${settings.spinWin || 60} Coins`;
+        spinCard.setAttribute('onclick', `startBattle('spin', ${settings.spinFee || 25}, ${settings.spinWin || 60})`);
+    }
 }
 
 function simulateTaskReward(task) {
