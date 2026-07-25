@@ -151,8 +151,9 @@ body {
     display: none;
     flex-direction: column;
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
-    padding: 16px 16px 85px 16px;
+    padding: 16px 16px 20px 16px;
     position: relative;
     animation: slideUpFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     -webkit-overflow-scrolling: touch;
@@ -1021,13 +1022,10 @@ body {
    10. BOTTOM NAVIGATION BAR (FIXED FOR MOBILE SAFE AREA)
    ========================================================================== */
 .bottom-nav-bar {
-    position: fixed;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative;
     width: 100%;
-    max-width: 480px;
     height: 65px;
+    flex-shrink: 0;
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: rgba(12, 12, 32, 0.98);
     backdrop-filter: blur(25px);
