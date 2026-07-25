@@ -1361,7 +1361,7 @@ function updateStrikerAimAngle(degVal) {
 }
 
 let isDraggingStriker = false;
-let dragStartPos = { x: 160, y: 260 };
+let dragTouchPos = { x: 160, y: 260 };
 
 function setupCarromCanvasEvents() {
     const canvas = carromState.canvas;
@@ -1386,15 +1386,12 @@ function setupCarromCanvasEvents() {
         if (!pos) return;
 
         isDraggingStriker = true;
-        dragStartPos = pos;
+        dragTouchPos = pos;
 
-        const angle = Math.atan2(pos.y - carromState.striker.y, pos.x - carromState.striker.x);
-        carromState.aimAngle = angle;
+        const dx = pos.x - carromState.striker.x;
+        const dy = pos.y - carromState.striker.y;
 
-        const deg = Math.round((angle * 180) / Math.PI);
-        const aimSlider = document.getElementById('carrom-slider-aim');
-        if (aimSlider) aimSlider.value = Math.max(-160, Math.min(-20, deg));
-
+        carromState.aimAngle = Math.atan2(dy, dx);
         drawCarromFrame();
     };
 
@@ -1403,26 +1400,29 @@ function setupCarromCanvasEvents() {
         const pos = getCanvasCoords(e);
         if (!pos) return;
 
-        const angle = Math.atan2(pos.y - carromState.striker.y, pos.x - carromState.striker.x);
-        carromState.aimAngle = angle;
+        dragTouchPos = pos;
+        const dx = pos.x - carromState.striker.x;
+        const dy = pos.y - carromState.striker.y;
 
-        const pullDist = Math.hypot(pos.x - carromState.striker.x, pos.y - carromState.striker.y);
+        carromState.aimAngle = Math.atan2(dy, dx);
+
+        const pullDist = Math.hypot(dx, dy);
         const calcPower = Math.min(28, Math.max(10, Math.round(pullDist / 4)));
         const powerSlider = document.getElementById('carrom-slider-power');
         const powerVal = document.getElementById('carrom-power-val');
         if (powerSlider) powerSlider.value = calcPower;
         if (powerVal) powerVal.textContent = calcPower;
 
-        const deg = Math.round((angle * 180) / Math.PI);
-        const aimSlider = document.getElementById('carrom-slider-aim');
-        if (aimSlider) aimSlider.value = Math.max(-160, Math.min(-20, deg));
-
         drawCarromFrame();
     };
 
     const endAim = () => {
-        if (isDraggingStriker) {
+        if (isDraggingStriker && !carromState.striker.isMoving) {
             isDraggingStriker = false;
+            const pullDist = Math.hypot(dragTouchPos.x - carromState.striker.x, dragTouchPos.y - carromState.striker.y);
+            if (pullDist > 12) {
+                shootCarromStriker();
+            }
         }
     };
 
@@ -1558,12 +1558,13 @@ function drawCarromFrame() {
     ctx.stroke();
     ctx.restore();
 
-    // 6. Draw Aim Line with Trajectory Dots & Arrow Head 🎯
+    // 6. Draw Aim Guidelines (Forward Trajectory Arrow + Backward Slingshot Line) 🎯
     if (!s.isMoving && carromState.gameActive) {
-        const aimLen = 70;
+        const aimLen = 75;
         const targetX = s.x + Math.cos(carromState.aimAngle) * aimLen;
         const targetY = s.y + Math.sin(carromState.aimAngle) * aimLen;
 
+        // Forward Aim Guideline Line
         ctx.beginPath();
         ctx.moveTo(s.x, s.y);
         ctx.lineTo(targetX, targetY);
@@ -1583,6 +1584,21 @@ function drawCarromFrame() {
         ctx.closePath();
         ctx.fillStyle = '#e03bff';
         ctx.fill();
+
+        // Backward Slingshot Pull Line (When dragging touch)
+        if (isDraggingStriker) {
+            ctx.beginPath();
+            ctx.moveTo(s.x, s.y);
+            ctx.lineTo(dragTouchPos.x, dragTouchPos.y);
+            ctx.strokeStyle = '#ff9f43';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(dragTouchPos.x, dragTouchPos.y, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#ff9f43';
+            ctx.fill();
+        }
     }
 }
 
