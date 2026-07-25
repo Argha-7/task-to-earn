@@ -1037,7 +1037,7 @@ body {
     justify-content: space-around;
     padding-left: 10px;
     padding-right: 10px;
-    z-index: 9999;
+    z-index: 1000;
 }
 
 .nav-item {
@@ -1103,7 +1103,7 @@ body {
     align-items: center;
     justify-content: center;
     padding: 16px;
-    z-index: 10000;
+    z-index: 2000;
 }
 
 .modal-overlay.active {

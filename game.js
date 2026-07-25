@@ -113,84 +113,29 @@ const AppState = {
     }
 };
 
-// Bulletproof Fail-Safe App Initializer
-function initApp() {
-    try {
-        loadStateFromStorage();
-        initTelegramUser();
-        setupEventListeners();
-        setupStorageSyncListener();
-        renderAllViews();
-    } catch (e) {
-        console.error("App Initialization non-fatal notice:", e);
-    }
+// Initialize App
+document.addEventListener('DOMContentLoaded', () => {
+    loadStateFromStorage();
+    initTelegramUser();
+    setupEventListeners();
+    setupStorageSyncListener();
+    renderAllViews();
 
-    // Ensure Header & Bottom Navigation Bar are always active & visible
-    showMainInterface();
-
-    // Instant Fail-Safe Splash Dismissal (150ms)
-    setTimeout(() => {
-        const splash = document.getElementById('splash-screen');
-        if (splash) {
-            splash.classList.remove('active');
-            splash.style.display = 'none';
-        }
-        showMainInterface();
-        navigateToTab('home-screen');
-    }, 150);
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
-} else {
-    initApp();
-}
-
-// Interface Navigation Engine
-function showMainInterface() {
+    // Keep main header & nav bar hidden during splash loading animation
     const header = document.getElementById('main-app-header');
     const nav = document.getElementById('main-bottom-nav');
-    if (header) header.style.display = 'flex';
-    if (nav) nav.style.display = 'flex';
-}
+    if (header) header.style.display = 'none';
+    if (nav) nav.style.display = 'none';
 
-function navigateToTab(tabId) {
-    audio.playClick();
-
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
-        if (screen.id !== tabId) {
-            screen.style.display = 'none';
-        }
-    });
-
-    const targetScreen = document.getElementById(tabId);
-    if (targetScreen) {
-        targetScreen.classList.add('active');
-        targetScreen.style.display = 'flex';
-    }
-
-    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-    
-    if (tabId === 'battle-screen') {
-        const item = document.getElementById('nav-battle');
-        if (item) item.classList.add('active');
-    } else if (tabId === 'wallet-screen') {
-        const item = document.getElementById('nav-wallet');
-        if (item) item.classList.add('active');
-    } else if (tabId === 'home-screen') {
-        const item = document.getElementById('nav-home');
-        if (item) item.classList.add('active');
-    } else if (tabId === 'refer-screen') {
-        const item = document.getElementById('nav-refer');
-        if (item) item.classList.add('active');
-    } else if (tabId === 'profile-screen') {
-        const item = document.getElementById('nav-profile');
-        if (item) item.classList.add('active');
-    }
-
-    showMainInterface();
-}
+    // Splash Screen Transition (1.5 seconds)
+    setTimeout(() => {
+        const splash = document.getElementById('splash-screen');
+        if (splash) splash.classList.remove('active');
+        
+        showMainInterface();
+        navigateToTab('home-screen');
+    }, 1500);
+});
 
 // Real-Time Cross Window & Firebase Synchronization Listener
 function setupStorageSyncListener() {
@@ -964,9 +909,282 @@ function triggerDynamicTaskModal(task) {
    CARROM BATTLE MINI-GAME PHYSICS ENGINE
    ========================================================================== */
 
-// Carrom Game Alias
+let carromCanvas = null;
+let carromCtx = null;
+let carromScore = 0;
+let isCarromRunning = false;
+
+const carromState = {
+    striker: { x: 150, y: 240, r: 12, vx: 0, vy: 0, color: '#f39c12' },
+    aiming: false,
+    dragStart: { x: 0, y: 0 },
+    dragCurrent: { x: 0, y: 0 },
+    coins: [],
+    pockets: [
+        { x: 25, y: 25, r: 16 },
+        { x: 275, y: 25, r: 16 },
+        { x: 25, y: 275, r: 16 },
+        { x: 275, y: 275, r: 16 }
+    ]
+};
+
 function startCarromGame() {
-    startCarromBattleGame();
+    audio.playClick();
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('carrom-game-screen').classList.add('active');
+
+    setTimeout(() => {
+        initCarromBoard();
+    }, 100);
+}
+
+function initCarromBoard() {
+    carromCanvas = document.getElementById('carromCanvas');
+    if (!carromCanvas) return;
+    carromCtx = carromCanvas.getContext('2d');
+
+    carromScore = 0;
+    document.getElementById('carrom-score').textContent = '0';
+
+    carromState.striker = { x: 150, y: 240, r: 12, vx: 0, vy: 0, color: '#e74c3c' };
+    carromState.aiming = false;
+
+    carromState.coins = [
+        { id: 1, x: 150, y: 140, r: 9, vx: 0, vy: 0, color: '#ffffff' },
+        { id: 2, x: 138, y: 155, r: 9, vx: 0, vy: 0, color: '#2c3e50' },
+        { id: 3, x: 162, y: 155, r: 9, vx: 0, vy: 0, color: '#f1c40f' },
+        { id: 4, x: 150, y: 170, r: 9, vx: 0, vy: 0, color: '#ffffff' }
+    ];
+
+    setupCarromControls();
+
+    if (!isCarromRunning) {
+        isCarromRunning = true;
+        requestAnimationFrame(runCarromLoop);
+    }
+}
+
+function setupCarromControls() {
+    if (!carromCanvas) return;
+
+    function getCanvasPos(e) {
+        const rect = carromCanvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+            x: (clientX - rect.left) * (carromCanvas.width / rect.width),
+            y: (clientY - rect.top) * (carromCanvas.height / rect.height)
+        };
+    }
+
+    carromCanvas.onmousedown = carromCanvas.ontouchstart = (e) => {
+        const pos = getCanvasPos(e);
+        const dist = Math.hypot(pos.x - carromState.striker.x, pos.y - carromState.striker.y);
+        if (dist <= carromState.striker.r + 10 && carromState.striker.vx === 0 && carromState.striker.vy === 0) {
+            carromState.aiming = true;
+            carromState.dragStart = pos;
+            carromState.dragCurrent = pos;
+        }
+    };
+
+    carromCanvas.onmousemove = carromCanvas.ontouchmove = (e) => {
+        if (carromState.aiming) {
+            carromState.dragCurrent = getCanvasPos(e);
+        }
+    };
+
+    carromCanvas.onmouseup = carromCanvas.ontouchend = () => {
+        if (carromState.aiming) {
+            carromState.aiming = false;
+            const dx = carromState.dragStart.x - carromState.dragCurrent.x;
+            const dy = carromState.dragStart.y - carromState.dragCurrent.y;
+            carromState.striker.vx = dx * 0.18;
+            carromState.striker.vy = dy * 0.18;
+            audio.playClick();
+        }
+    };
+}
+
+function runCarromLoop() {
+    if (!isCarromRunning) return;
+    updateCarromPhysics();
+    drawCarromBoard();
+    requestAnimationFrame(runCarromLoop);
+}
+
+function updateCarromPhysics() {
+    const allPieces = [carromState.striker, ...carromState.coins];
+
+    // Move pieces and apply friction
+    allPieces.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.97;
+        p.vy *= 0.97;
+
+        if (Math.abs(p.vx) < 0.05) p.vx = 0;
+        if (Math.abs(p.vy) < 0.05) p.vy = 0;
+
+        // Bounce off board walls (margin 15px)
+        if (p.x - p.r < 15) { p.x = 15 + p.r; p.vx *= -0.8; }
+        if (p.x + p.r > 285) { p.x = 285 - p.r; p.vx *= -0.8; }
+        if (p.y - p.r < 15) { p.y = 15 + p.r; p.vy *= -0.8; }
+        if (p.y + p.r > 285) { p.y = 285 - p.r; p.vy *= -0.8; }
+    });
+
+    // Elastic Collisions between pieces
+    for (let i = 0; i < allPieces.length; i++) {
+        for (let j = i + 1; j < allPieces.length; j++) {
+            const p1 = allPieces[i];
+            const p2 = allPieces[j];
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const dist = Math.hypot(dx, dy);
+            const minDist = p1.r + p2.r;
+
+            if (dist < minDist && dist > 0) {
+                const nx = dx / dist;
+                const ny = dy / dist;
+                const kx = p1.vx - p2.vx;
+                const ky = p1.vy - p2.vy;
+                const p = 2 * (nx * kx + ny * ky) / 2;
+
+                p1.vx -= p * nx;
+                p1.vy -= p * ny;
+                p2.vx += p * nx;
+                p2.vy += p * ny;
+
+                // Push apart to prevent overlap
+                const overlap = minDist - dist;
+                p1.x -= nx * overlap * 0.5;
+                p1.y -= ny * overlap * 0.5;
+                p2.x += nx * overlap * 0.5;
+                p2.y += ny * overlap * 0.5;
+            }
+        }
+    }
+
+    // Check Pockets
+    carromState.coins.forEach((c, idx) => {
+        carromState.pockets.forEach(pkt => {
+            const d = Math.hypot(c.x - pkt.x, c.y - pkt.y);
+            if (d < pkt.r + 2) {
+                // Coin Pocketed!
+                carromState.coins.splice(idx, 1);
+                carromScore++;
+                document.getElementById('carrom-score').textContent = carromScore;
+                audio.playCoin();
+
+                if (carromScore >= 3) {
+                    // Win Match!
+                    setTimeout(() => {
+                        audio.playWin();
+                        AppState.coins += 50;
+                        AppState.totalEarned += 50;
+                        addHistoryItem('Carrom Victory Reward', '+50', true);
+                        saveStateToStorage();
+
+                        if (typeof DatabaseAPI !== 'undefined') {
+                            DatabaseAPI.logTaskCompletion({
+                                user: AppState.user ? AppState.user.name : 'User',
+                                email: AppState.user ? AppState.user.email : 'user@app.com',
+                                taskTitle: 'Carrom Battle Match Win',
+                                reward: 50,
+                                date: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+                                status: 'Match Won (Score 3/3)'
+                            });
+                        }
+
+                        showToast('🎉 Victory! +50 Coins Won!');
+                        navigateToTab('home-screen');
+                    }, 500);
+                }
+            }
+        });
+    });
+
+    // Reset striker if it drops in pocket
+    carromState.pockets.forEach(pkt => {
+        const d = Math.hypot(carromState.striker.x - pkt.x, carromState.striker.y - pkt.y);
+        if (d < pkt.r) {
+            carromState.striker.x = 150;
+            carromState.striker.y = 240;
+            carromState.striker.vx = 0;
+            carromState.striker.vy = 0;
+            audio.triggerHaptic('error');
+        }
+    });
+}
+
+function drawCarromBoard() {
+    if (!carromCtx) return;
+    carromCtx.clearRect(0, 0, 300, 300);
+
+    // Board background & frame
+    carromCtx.fillStyle = '#2a1b0c';
+    carromCtx.fillRect(0, 0, 300, 300);
+    carromCtx.strokeStyle = '#5a3d1e';
+    carromCtx.lineWidth = 12;
+    carromCtx.strokeRect(6, 6, 288, 288);
+
+    // Center circle
+    carromCtx.beginPath();
+    carromCtx.arc(150, 150, 25, 0, Math.PI * 2);
+    carromCtx.strokeStyle = '#8a5a2b';
+    carromCtx.lineWidth = 2;
+    carromCtx.stroke();
+
+    // 4 Corner Pockets
+    carromState.pockets.forEach(pkt => {
+        carromCtx.beginPath();
+        carromCtx.arc(pkt.x, pkt.y, pkt.r, 0, Math.PI * 2);
+        carromCtx.fillStyle = '#0a0502';
+        carromCtx.fill();
+        carromCtx.strokeStyle = '#4a2e12';
+        carromCtx.stroke();
+    });
+
+    // Baseline for striker
+    carromCtx.beginPath();
+    carromCtx.moveTo(50, 240);
+    carromCtx.lineTo(250, 240);
+    carromCtx.strokeStyle = '#8a5a2b';
+    carromCtx.lineWidth = 1.5;
+    carromCtx.stroke();
+
+    // Draw Aiming Line
+    if (carromState.aiming) {
+        carromCtx.beginPath();
+        carromCtx.moveTo(carromState.striker.x, carromState.striker.y);
+        const aimX = carromState.striker.x + (carromState.dragStart.x - carromState.dragCurrent.x);
+        const aimY = carromState.striker.y + (carromState.dragStart.y - carromState.dragCurrent.y);
+        carromCtx.lineTo(aimX, aimY);
+        carromCtx.strokeStyle = '#e03bff';
+        carromCtx.lineWidth = 3;
+        carromCtx.setLineDash([4, 4]);
+        carromCtx.stroke();
+        carromCtx.setLineDash([]);
+    }
+
+    // Draw Coins
+    carromState.coins.forEach(c => {
+        carromCtx.beginPath();
+        carromCtx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+        carromCtx.fillStyle = c.color;
+        carromCtx.fill();
+        carromCtx.strokeStyle = '#000';
+        carromCtx.lineWidth = 1;
+        carromCtx.stroke();
+    });
+
+    // Draw Striker
+    carromCtx.beginPath();
+    carromCtx.arc(carromState.striker.x, carromState.striker.y, carromState.striker.r, 0, Math.PI * 2);
+    carromCtx.fillStyle = carromState.striker.color;
+    carromCtx.fill();
+    carromCtx.strokeStyle = '#fff';
+    carromCtx.lineWidth = 2;
+    carromCtx.stroke();
 }
 
 /* ==========================================================================
@@ -1131,23 +1349,18 @@ function closeVictoryModal() {
     navigateToTab('battle-screen');
 }
 
-// Interactive Carrom Board Mini-Game Engine (Real 2D Physics)
+// Interactive Carrom Board Mini-Game Engine
 let carromState = {
     userScore: 0,
     oppScore: 0,
-    isUserTurn: true,
-    isShooting: false,
     pucks: [],
-    striker: { x: 150, y: 250, radius: 13, vx: 0, vy: 0 },
-    dragAim: { isDragging: false, startX: 0, startY: 0, currX: 0, currY: 0 }
+    striker: { x: 150, y: 250, radius: 12, vx: 0, vy: 0 }
 };
 
 function startCarromBattleGame() {
     audio.playClick();
     carromState.userScore = 0;
     carromState.oppScore = 0;
-    carromState.isUserTurn = true;
-    carromState.isShooting = false;
     
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const carromScreen = document.getElementById('carrom-game-screen');
@@ -1158,12 +1371,6 @@ function startCarromBattleGame() {
     if (uScore) uScore.textContent = '0';
     if (oScore) oScore.textContent = '0';
 
-    const turnInd = document.getElementById('carrom-turn-indicator');
-    if (turnInd) {
-        turnInd.textContent = 'YOUR TURN';
-        turnInd.style.color = '#00d2d3';
-    }
-
     initCarromBoard();
 }
 
@@ -1172,30 +1379,16 @@ function initCarromBoard() {
     if (!canvas) return;
     
     carromState.pucks = [
-        { x: 150, y: 150, radius: 10, color: '#ff3d71', pts: 30, type: 'queen', vx: 0, vy: 0, pocketed: false },
-        { x: 132, y: 138, radius: 9, color: '#ffffff', pts: 10, type: 'white', vx: 0, vy: 0, pocketed: false },
-        { x: 168, y: 138, radius: 9, color: '#ffffff', pts: 10, type: 'white', vx: 0, vy: 0, pocketed: false },
-        { x: 132, y: 162, radius: 9, color: '#111122', pts: 5, type: 'black', vx: 0, vy: 0, pocketed: false },
-        { x: 168, y: 162, radius: 9, color: '#111122', pts: 5, type: 'black', vx: 0, vy: 0, pocketed: false },
-        { x: 150, y: 125, radius: 9, color: '#ffffff', pts: 10, type: 'white', vx: 0, vy: 0, pocketed: false },
-        { x: 150, y: 175, radius: 9, color: '#111122', pts: 5, type: 'black', vx: 0, vy: 0, pocketed: false }
+        { x: 150, y: 150, radius: 10, color: '#ff3d71', pts: 30, type: 'queen', pocketed: false },
+        { x: 135, y: 140, radius: 9, color: '#ffffff', pts: 10, type: 'white', pocketed: false },
+        { x: 165, y: 140, radius: 9, color: '#ffffff', pts: 10, type: 'white', pocketed: false },
+        { x: 135, y: 160, radius: 9, color: '#111122', pts: 5, type: 'black', pocketed: false },
+        { x: 165, y: 160, radius: 9, color: '#111122', pts: 5, type: 'black', pocketed: false },
+        { x: 150, y: 130, radius: 9, color: '#ffffff', pts: 10, type: 'white', pocketed: false },
+        { x: 150, y: 170, radius: 9, color: '#111122', pts: 5, type: 'black', pocketed: false }
     ];
 
     carromState.striker = { x: 150, y: 250, radius: 13, vx: 0, vy: 0 };
-    setupCarromCanvasEvents(canvas);
-    drawCarromBoard();
-}
-
-function updateCarromStrikerPos(val) {
-    if (carromState.isShooting || !carromState.isUserTurn) return;
-    const num = parseInt(val, 10);
-    carromState.striker.x = num;
-    const posLabel = document.getElementById('carrom-pos-val');
-    if (posLabel) {
-        if (num < 100) posLabel.textContent = 'Left';
-        else if (num > 200) posLabel.textContent = 'Right';
-        else posLabel.textContent = 'Center';
-    }
     drawCarromBoard();
 }
 
@@ -1204,12 +1397,10 @@ function drawCarromBoard() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     
-    // Board Base
     ctx.fillStyle = '#e4c49f';
     ctx.fillRect(0, 0, 300, 300);
 
-    // 4 Corner Pockets
-    const pockets = [{x: 22, y: 22}, {x: 278, y: 22}, {x: 22, y: 278}, {x: 278, y: 278}];
+    const pockets = [{x: 20, y: 20}, {x: 280, y: 20}, {x: 20, y: 280}, {x: 280, y: 280}];
     ctx.fillStyle = '#111111';
     pockets.forEach(p => {
         ctx.beginPath();
@@ -1217,219 +1408,105 @@ function drawCarromBoard() {
         ctx.fill();
     });
 
-    // Center Circle & Outer Circles
     ctx.strokeStyle = '#8b4513';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(150, 150, 35, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Baseline for Striker
-    ctx.strokeStyle = 'rgba(139, 69, 19, 0.4)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(50, 250);
-    ctx.lineTo(250, 250);
-    ctx.stroke();
-
-    // Draw Pucks
     carromState.pucks.forEach(puck => {
         if (!puck.pocketed) {
             ctx.fillStyle = puck.color;
             ctx.beginPath();
             ctx.arc(puck.x, puck.y, puck.radius, 0, Math.PI * 2);
             ctx.fill();
-            ctx.strokeStyle = '#222';
-            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
             ctx.stroke();
         }
     });
 
-    // Draw Striker
     const st = carromState.striker;
     ctx.fillStyle = '#e03bff';
     ctx.beginPath();
     ctx.arc(st.x, st.y, st.radius, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 2;
     ctx.stroke();
-
-    // Draw Aim Target Line if dragging or ready
-    if (!carromState.isShooting && carromState.isUserTurn) {
-        ctx.strokeStyle = 'rgba(224, 59, 255, 0.6)';
-        ctx.setLineDash([4, 4]);
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(st.x, st.y);
-        ctx.lineTo(st.x, st.y - 80);
-        ctx.stroke();
-        ctx.setLineDash([]);
-    }
 }
 
-function shootCarromStriker() {
-    if (carromState.isShooting || !carromState.isUserTurn) return;
+function strikeCarromPuck() {
     audio.playClick();
-    carromState.isShooting = true;
-
     const st = carromState.striker;
-    const angle = (Math.random() * 0.6 - 0.3) - Math.PI / 2;
-    const speed = 12 + Math.random() * 4;
+    if (st.vx !== 0 || st.vy !== 0) return;
+
+    const angle = (Math.random() * 0.8 - 0.4) - Math.PI / 2;
+    const speed = 11 + Math.random() * 5;
     st.vx = Math.cos(angle) * speed;
     st.vy = Math.sin(angle) * speed;
 
-    runCarromPhysicsEngine();
+    runCarromPhysics();
 }
 
-function setupCarromCanvasEvents(canvas) {
-    let isDragging = false;
-    let dragStart = { x: 0, y: 0 };
+function runCarromPhysics() {
+    const canvas = document.getElementById('carrom-canvas');
+    if (!canvas) return;
 
-    canvas.onmousedown = (e) => {
-        if (carromState.isShooting || !carromState.isUserTurn) return;
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        if (Math.hypot(mouseX - carromState.striker.x, mouseY - carromState.striker.y) < 25) {
-            isDragging = true;
-            dragStart = { x: mouseX, y: mouseY };
-        }
-    };
-
-    canvas.onmouseup = (e) => {
-        if (isDragging) {
-            isDragging = false;
-            shootCarromStriker();
-        }
-    };
-
-    canvas.ontouchstart = (e) => {
-        if (carromState.isShooting || !carromState.isUserTurn || !e.touches[0]) return;
-        const rect = canvas.getBoundingClientRect();
-        const touchX = e.touches[0].clientX - rect.left;
-        const touchY = e.touches[0].clientY - rect.top;
-        if (Math.hypot(touchX - carromState.striker.x, touchY - carromState.striker.y) < 25) {
-            isDragging = true;
-        }
-    };
-
-    canvas.ontouchend = () => {
-        if (isDragging) {
-            isDragging = false;
-            shootCarromStriker();
-        }
-    };
-}
-
-function runCarromPhysicsEngine() {
     function update() {
         const st = carromState.striker;
         
-        // Move Striker & Pucks
         st.x += st.vx;
         st.y += st.vy;
-        st.vx *= 0.97;
-        st.vy *= 0.97;
+        st.vx *= 0.96;
+        st.vy *= 0.96;
 
-        // Bounce Striker off Board Walls
-        if (st.x - st.radius < 12 || st.x + st.radius > 288) st.vx *= -1;
-        if (st.y - st.radius < 12 || st.y + st.radius > 288) st.vy *= -1;
+        if (st.x - st.radius < 10 || st.x + st.radius > 290) st.vx *= -1;
+        if (st.y - st.radius < 10 || st.y + st.radius > 290) st.vy *= -1;
 
-        // Puck Physics & Collision Damping
         carromState.pucks.forEach(p => {
             if (p.pocketed) return;
-
-            p.x += p.vx;
-            p.y += p.vy;
-            p.vx *= 0.96;
-            p.vy *= 0.96;
-
-            // Puck Wall Bounces
-            if (p.x - p.radius < 12 || p.x + p.radius > 288) p.vx *= -1;
-            if (p.y - p.radius < 12 || p.y + p.radius > 288) p.vy *= -1;
-
-            // Collision: Striker with Puck
             const dx = p.x - st.x;
             const dy = p.y - st.y;
             const dist = Math.hypot(dx, dy);
             if (dist < st.radius + p.radius) {
                 audio.playClick();
-                p.vx += st.vx * 0.75;
-                p.vy += st.vy * 0.75;
-                st.vx *= 0.6;
-                st.vy *= 0.6;
-            }
-
-            // Pocket Check (4 Corners)
-            const pockets = [{x: 22, y: 22}, {x: 278, y: 22}, {x: 22, y: 278}, {x: 278, y: 278}];
-            pockets.forEach(pkt => {
-                if (Math.hypot(p.x - pkt.x, p.y - pkt.y) < 22) {
-                    p.pocketed = true;
-                    p.vx = 0;
-                    p.vy = 0;
-                    audio.playCoin();
-
-                    if (carromState.isUserTurn) {
+                p.x += st.vx * 0.7;
+                p.y += st.vy * 0.7;
+                
+                const pockets = [{x: 20, y: 20}, {x: 280, y: 20}, {x: 20, y: 280}, {x: 280, y: 280}];
+                pockets.forEach(pkt => {
+                    if (Math.hypot(p.x - pkt.x, p.y - pkt.y) < 24) {
+                        p.pocketed = true;
                         carromState.userScore += p.pts;
+                        audio.playCoin();
                         const uVal = document.getElementById('carrom-user-score');
                         if (uVal) uVal.textContent = carromState.userScore;
-                    } else {
-                        carromState.oppScore += p.pts;
-                        const oVal = document.getElementById('carrom-opp-score');
-                        if (oVal) oVal.textContent = carromState.oppScore;
                     }
-                }
-            });
+                });
+            }
         });
 
         drawCarromBoard();
 
-        const activeMotion = Math.hypot(st.vx, st.vy) > 0.25 || carromState.pucks.some(p => Math.hypot(p.vx, p.vy) > 0.25);
-
-        if (activeMotion) {
+        if (Math.hypot(st.vx, st.vy) > 0.2) {
             requestAnimationFrame(update);
         } else {
             st.vx = 0;
             st.vy = 0;
-            st.x = parseInt(document.getElementById('carrom-striker-slider')?.value || '150', 10);
+            st.x = 150;
             st.y = 250;
-            carromState.isShooting = false;
             drawCarromBoard();
 
-            // Check Win Condition
-            if (carromState.userScore >= 30 || carromState.oppScore >= 30 || carromState.pucks.every(p => p.pocketed)) {
-                completeBattleResult(carromState.userScore >= carromState.oppScore);
-                return;
-            }
+            setTimeout(() => {
+                carromState.oppScore += Math.floor(Math.random() * 12);
+                const oVal = document.getElementById('carrom-opp-score');
+                if (oVal) oVal.textContent = carromState.oppScore;
 
-            // Bot Turn Trigger
-            if (carromState.isUserTurn) {
-                carromState.isUserTurn = false;
-                const turnInd = document.getElementById('carrom-turn-indicator');
-                if (turnInd) {
-                    turnInd.textContent = "BOT'S TURN";
-                    turnInd.style.color = "#ff5252";
+                if (carromState.userScore >= 25 || carromState.oppScore >= 25 || carromState.pucks.every(p => p.pocketed)) {
+                    completeBattleResult(carromState.userScore >= carromState.oppScore);
                 }
-
-                setTimeout(() => {
-                    const botScoreGain = Math.random() > 0.4 ? (Math.random() > 0.6 ? 10 : 5) : 0;
-                    carromState.oppScore += botScoreGain;
-                    const oVal = document.getElementById('carrom-opp-score');
-                    if (oVal) oVal.textContent = carromState.oppScore;
-
-                    carromState.isUserTurn = true;
-                    if (turnInd) {
-                        turnInd.textContent = "YOUR TURN";
-                        turnInd.style.color = "#00d2d3";
-                    }
-                    drawCarromBoard();
-
-                    if (carromState.userScore >= 30 || carromState.oppScore >= 30) {
-                        completeBattleResult(carromState.userScore >= carromState.oppScore);
-                    }
-                }, 1000);
-            }
+            }, 500);
         }
     }
 
