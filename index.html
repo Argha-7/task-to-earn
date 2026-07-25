@@ -475,30 +475,51 @@
         </div>
 
         <!-- ==========================================
-             10. CARROM BATTLE MINI-GAME SCREEN
+             10. REAL CARROM DISC POOL BATTLE SCREEN
              ========================================== -->
         <div id="carrom-game-screen" class="screen">
             <div class="subpage-top-bar">
-                <button class="btn-back" onclick="navigateToTab('battle-screen')"><i class="fa-solid fa-arrow-left"></i> Exit Carrom</button>
+                <button class="btn-back" onclick="navigateToTab('battle-screen')"><i class="fa-solid fa-arrow-left"></i> Exit Battle</button>
             </div>
-            <div class="game-container-card" style="padding: 16px; text-align: center;">
-                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:12px;">
-                    <div>
-                        <h2 style="font-size:18px; font-weight: 900;">⚔️ Carrom Battle Arena</h2>
-                        <span id="carrom-turn-status" style="font-size:12px; color:var(--accent-magenta); font-weight: 700;">Your Turn (White Pieces)</span>
+            
+            <div class="game-container-card" style="padding: 14px; text-align: center;">
+                <!-- Real Match Score Header (You vs Bot) -->
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:12px; background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08);">
+                    <!-- You (White) -->
+                    <div style="text-align: left;">
+                        <div style="font-size:13px; font-weight:800; color:#fff;">👤 YOU <span style="font-size:10px; color:#aaa;">(White)</span></div>
+                        <div style="font-size:18px; font-weight:900; color:var(--accent-magenta);">
+                            <span id="carrom-player-score">0</span> / 3 <i class="fa-solid fa-circle" style="font-size:10px; color:#fff;"></i>
+                        </div>
                     </div>
-                    <div style="background:rgba(255,193,7,0.15); color:var(--coin-gold); padding:6px 14px; border-radius:12px; font-weight:800; font-size:13px;">
-                        Score: <span id="carrom-score">0</span> / 3
+
+                    <!-- Turn Status Badge -->
+                    <div style="text-align: center;">
+                        <div id="carrom-turn-status" style="font-size:11px; font-weight:900; background:rgba(224,59,255,0.2); color:var(--accent-magenta); padding:4px 10px; border-radius:12px; border:1px solid rgba(224,59,255,0.4);">
+                            🎯 YOUR TURN
+                        </div>
+                    </div>
+
+                    <!-- Bot (Black) -->
+                    <div style="text-align: right;">
+                        <div style="font-size:13px; font-weight:800; color:#fff;">🤖 BOT <span style="font-size:10px; color:#aaa;">(Black)</span></div>
+                        <div style="font-size:18px; font-weight:900; color:#1b84ff;">
+                            <span id="carrom-bot-score">0</span> / 3 <i class="fa-solid fa-circle" style="font-size:10px; color:#2c3e50;"></i>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Canvas Wooden Board -->
-                <canvas id="carromCanvas" width="320" height="320" style="background:#2a1b0c; border:8px solid #5a3d1e; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.9); cursor:crosshair; touch-action:none; margin: 0 auto;"></canvas>
+                <canvas id="carromCanvas" width="320" height="320" style="background:#2a1b0c; border:8px solid #5a3d1e; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.9); cursor:crosshair; touch-action:none; margin: 0 auto; display:block;"></canvas>
 
-                <!-- Striker Aim & Power Controls -->
-                <div style="margin-top:14px; width:100%; max-width:320px; margin-left:auto; margin-right:auto;">
+                <!-- Interactive Slingshot & Slider Controls -->
+                <div style="margin-top:12px; width:100%; max-width:320px; margin-left:auto; margin-right:auto;">
+                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">
+                        💡 <b>Touch & Drag Striker on Board</b> OR use sliders below to aim & shoot!
+                    </div>
+
                     <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">
-                        <span>Position Striker</span>
+                        <span>Position</span>
                         <span>Aim Direction</span>
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
@@ -508,10 +529,10 @@
 
                     <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">
                         <span>Shot Power</span>
-                        <span id="carrom-power-val" style="color: #ff9f43; font-weight: 800;">15</span>
+                        <span id="carrom-power-val" style="color: #ff9f43; font-weight: 800;">16</span>
                     </div>
-                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
-                        <input type="range" id="carrom-slider-power" min="8" max="26" value="15" oninput="document.getElementById('carrom-power-val').textContent=this.value" style="width: 100%; accent-color: #ff9f43;">
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                        <input type="range" id="carrom-slider-power" min="8" max="28" value="16" oninput="document.getElementById('carrom-power-val').textContent=this.value" style="width: 100%; accent-color: #ff9f43;">
                     </div>
 
                     <div style="display: flex; gap: 10px;">

@@ -1301,12 +1301,16 @@ function initCarromBoard() {
     carromState.gameActive = true;
     carromState.aimAngle = -Math.PI / 2;
 
-    const scoreEl = document.getElementById('carrom-score');
-    if (scoreEl) scoreEl.textContent = '0';
+    const pScoreEl = document.getElementById('carrom-player-score');
+    if (pScoreEl) pScoreEl.textContent = '0';
+    const bScoreEl = document.getElementById('carrom-bot-score');
+    if (bScoreEl) bScoreEl.textContent = '0';
+
     const statusEl = document.getElementById('carrom-turn-status');
     if (statusEl) {
-        statusEl.textContent = 'Your Turn (White Pieces)';
+        statusEl.textContent = '🎯 YOUR TURN';
         statusEl.style.color = 'var(--accent-magenta)';
+        statusEl.style.background = 'rgba(224,59,255,0.2)';
     }
 
     const cx = 160, cy = 140;
@@ -1356,38 +1360,79 @@ function updateStrikerAimAngle(degVal) {
     drawCarromFrame();
 }
 
+let isDraggingStriker = false;
+let dragStartPos = { x: 160, y: 260 };
+
 function setupCarromCanvasEvents() {
     const canvas = carromState.canvas;
     if (!canvas || canvas.dataset.hasListeners) return;
 
     canvas.dataset.hasListeners = 'true';
 
-    const handleAimPointer = (e) => {
-        if (!carromState.gameActive || carromState.striker.isMoving) return;
+    function getCanvasCoords(e) {
         const rect = canvas.getBoundingClientRect();
         const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : null);
         const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : null);
+        if (clientX === null || clientY === null) return null;
+        return {
+            x: (clientX - rect.left) * (320 / rect.width),
+            y: (clientY - rect.top) * (320 / rect.height)
+        };
+    }
 
-        if (clientX !== null && clientY !== null) {
-            const touchX = (clientX - rect.left) * (320 / rect.width);
-            const touchY = (clientY - rect.top) * (320 / rect.height);
+    const startAim = (e) => {
+        if (!carromState.gameActive || carromState.striker.isMoving || !carromState.isPlayerTurn) return;
+        const pos = getCanvasCoords(e);
+        if (!pos) return;
 
-            const angle = Math.atan2(touchY - carromState.striker.y, touchX - carromState.striker.x);
-            carromState.aimAngle = angle;
+        isDraggingStriker = true;
+        dragStartPos = pos;
 
-            // Sync Aim Slider
-            const deg = Math.round((angle * 180) / Math.PI);
-            const aimSlider = document.getElementById('carrom-slider-aim');
-            if (aimSlider) aimSlider.value = Math.max(-160, Math.min(-20, deg));
+        const angle = Math.atan2(pos.y - carromState.striker.y, pos.x - carromState.striker.x);
+        carromState.aimAngle = angle;
 
-            drawCarromFrame();
+        const deg = Math.round((angle * 180) / Math.PI);
+        const aimSlider = document.getElementById('carrom-slider-aim');
+        if (aimSlider) aimSlider.value = Math.max(-160, Math.min(-20, deg));
+
+        drawCarromFrame();
+    };
+
+    const moveAim = (e) => {
+        if (!isDraggingStriker || carromState.striker.isMoving) return;
+        const pos = getCanvasCoords(e);
+        if (!pos) return;
+
+        const angle = Math.atan2(pos.y - carromState.striker.y, pos.x - carromState.striker.x);
+        carromState.aimAngle = angle;
+
+        const pullDist = Math.hypot(pos.x - carromState.striker.x, pos.y - carromState.striker.y);
+        const calcPower = Math.min(28, Math.max(10, Math.round(pullDist / 4)));
+        const powerSlider = document.getElementById('carrom-slider-power');
+        const powerVal = document.getElementById('carrom-power-val');
+        if (powerSlider) powerSlider.value = calcPower;
+        if (powerVal) powerVal.textContent = calcPower;
+
+        const deg = Math.round((angle * 180) / Math.PI);
+        const aimSlider = document.getElementById('carrom-slider-aim');
+        if (aimSlider) aimSlider.value = Math.max(-160, Math.min(-20, deg));
+
+        drawCarromFrame();
+    };
+
+    const endAim = () => {
+        if (isDraggingStriker) {
+            isDraggingStriker = false;
         }
     };
 
-    canvas.addEventListener('mousedown', handleAimPointer);
-    canvas.addEventListener('mousemove', handleAimPointer);
-    canvas.addEventListener('touchstart', handleAimPointer, { passive: true });
-    canvas.addEventListener('touchmove', handleAimPointer, { passive: true });
+    canvas.addEventListener('mousedown', startAim);
+    canvas.addEventListener('mousemove', moveAim);
+    window.addEventListener('mouseup', endAim);
+
+    canvas.addEventListener('touchstart', startAim, { passive: true });
+    canvas.addEventListener('touchmove', moveAim, { passive: true });
+    window.addEventListener('touchend', endAim);
 }
 
 function drawCarromFrame() {
@@ -1622,11 +1667,13 @@ function runCarromPhysicsLoop() {
                     audio.playCoin();
                     if (p.type === 'white' || p.type === 'red') {
                         carromState.playerScore += p.val;
-                        const scoreEl = document.getElementById('carrom-score');
-                        if (scoreEl) scoreEl.textContent = carromState.playerScore;
+                        const pScoreEl = document.getElementById('carrom-player-score');
+                        if (pScoreEl) pScoreEl.textContent = carromState.playerScore;
                         showToast(`🎉 Pocketed ${p.type.toUpperCase()} piece! +${p.val} Score`);
                     } else {
                         carromState.botScore += p.val;
+                        const bScoreEl = document.getElementById('carrom-bot-score');
+                        if (bScoreEl) bScoreEl.textContent = carromState.botScore;
                         showToast('Black piece pocketed for Bot!');
                     }
                 }
