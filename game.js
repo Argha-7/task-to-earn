@@ -270,6 +270,9 @@ function loadStateFromStorage() {
     const savedHistory = localStorage.getItem('rewardzoo_history');
     const savedPayouts = localStorage.getItem('rewardzoo_payouts');
     const savedDaily = localStorage.getItem('rewardzoo_daily_claimed');
+    const savedBattles = localStorage.getItem('todoearn_battles_played');
+    const savedWon = localStorage.getItem('todoearn_battles_won');
+    const savedMission = localStorage.getItem('todoearn_mission3_claimed');
 
     if (savedUser) AppState.user = JSON.parse(savedUser);
     if (savedCoins !== null) AppState.coins = parseInt(savedCoins, 10);
@@ -277,6 +280,9 @@ function loadStateFromStorage() {
     if (savedHistory) AppState.history = JSON.parse(savedHistory);
     if (savedPayouts) AppState.payouts = JSON.parse(savedPayouts);
     if (savedDaily) AppState.dailyClaimed = (savedDaily === 'true');
+    if (savedBattles) AppState.battlesPlayedToday = parseInt(savedBattles, 10);
+    if (savedWon) AppState.battlesWonTotal = parseInt(savedWon, 10);
+    if (savedMission) AppState.mission3BattlesClaimed = (savedMission === 'true');
 }
 
 function saveStateToStorage() {
@@ -296,6 +302,9 @@ function saveStateToStorage() {
     localStorage.setItem('rewardzoo_history', JSON.stringify(AppState.history));
     localStorage.setItem('rewardzoo_payouts', JSON.stringify(AppState.payouts));
     localStorage.setItem('rewardzoo_daily_claimed', AppState.dailyClaimed.toString());
+    localStorage.setItem('todoearn_battles_played', (AppState.battlesPlayedToday || 0).toString());
+    localStorage.setItem('todoearn_battles_won', (AppState.battlesWonTotal || 0).toString());
+    localStorage.setItem('todoearn_mission3_claimed', (AppState.mission3BattlesClaimed || false).toString());
 }
 
 // Auto-Detect Telegram Profile & Sync Firebase
@@ -435,6 +444,7 @@ function navigateToTab(screenId) {
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
     
     if (screenId === 'refer-screen') document.getElementById('nav-refer')?.classList.add('active');
+    else if (screenId === 'battle-screen') document.getElementById('nav-battle')?.classList.add('active');
     else if (screenId === 'wallet-screen') document.getElementById('nav-wallet')?.classList.add('active');
     else if (screenId === 'home-screen') document.getElementById('nav-home')?.classList.add('active');
     else if (screenId === 'history-screen') document.getElementById('nav-history')?.classList.add('active');
@@ -474,6 +484,8 @@ function renderAllViews() {
 
     renderHistory();
     renderPayouts();
+    renderBattleMissions();
+    renderLeaderboard();
 }
 
 // Daily Reward Claiming
@@ -1166,4 +1178,175 @@ function drawCarromBoard() {
     carromCtx.strokeStyle = '#fff';
     carromCtx.lineWidth = 2;
     carromCtx.stroke();
+}
+
+/* ==========================================================================
+   BATTLE ARENA, MISSIONS & LEADERBOARD LOGIC
+   ========================================================================== */
+
+function startBattle(gameType, entryFee, winReward) {
+    if (AppState.coins < entryFee) {
+        audio.triggerHaptic('error');
+        showToast(`⚠️ Insufficient coins! Need ${entryFee} coins to enter.`);
+        return;
+    }
+
+    audio.playClick();
+    AppState.coins -= entryFee;
+    addHistoryItem(`${gameType.toUpperCase()} Battle Fee`, `-${entryFee}`, false);
+    
+    AppState.battlesPlayedToday = (AppState.battlesPlayedToday || 0) + 1;
+    saveStateToStorage();
+    renderAllViews();
+
+    showToast(`Entered ${gameType} Battle (-${entryFee} Coins)`);
+
+    AppState.currentBattle = {
+        type: gameType,
+        entryFee: entryFee,
+        winReward: winReward
+    };
+
+    if (gameType === 'color') {
+        startColorGame();
+    } else if (gameType === 'carrom') {
+        startCarromBattleGame();
+    } else if (gameType === 'spin') {
+        startSpinBattleGame();
+    }
+}
+
+function completeBattleResult(won) {
+    const battle = AppState.currentBattle || { winReward: 50, entryFee: 20, type: 'carrom' };
+    
+    if (won) {
+        audio.playWin();
+        AppState.coins += battle.winReward;
+        AppState.totalEarned += battle.winReward;
+        AppState.battlesWonTotal = (AppState.battlesWonTotal || 0) + 1;
+        addHistoryItem(`${battle.type.toUpperCase()} Battle Win`, `+${battle.winReward}`, true);
+        showToast(`🎉 Victory! Won +${battle.winReward} Coins!`);
+    } else {
+        audio.triggerHaptic('warning');
+        showToast('Defeat! Better luck next battle!');
+    }
+
+    AppState.currentBattle = null;
+    saveStateToStorage();
+    
+    if (typeof DatabaseAPI !== 'undefined' && AppState.user) {
+        DatabaseAPI.saveBattleStats(AppState.user.email, {
+            name: AppState.user.name,
+            battlesWon: AppState.battlesWonTotal,
+            battlesPlayed: AppState.battlesPlayedToday,
+            coinsEarned: AppState.totalEarned
+        });
+    }
+
+    renderAllViews();
+    navigateToTab('battle-screen');
+}
+
+function startCarromBattleGame() {
+    showToast('⚔️ Carrom Battle Match Started!');
+    setTimeout(() => {
+        const win = Math.random() > 0.35; // 65% win rate for engaging gameplay
+        completeBattleResult(win);
+    }, 2000);
+}
+
+function startSpinBattleGame() {
+    showToast('⚔️ Lucky Spin Battle Wheel Spinning!');
+    setTimeout(() => {
+        const win = Math.random() > 0.4;
+        completeBattleResult(win);
+    }, 2000);
+}
+
+function claim3BattlesMission() {
+    if ((AppState.battlesPlayedToday || 0) < 3) {
+        showToast('Complete 3 battles first!');
+        return;
+    }
+    if (AppState.mission3BattlesClaimed) {
+        showToast('Already claimed today!');
+        return;
+    }
+
+    audio.playWin();
+    AppState.coins += 20;
+    AppState.totalEarned += 20;
+    AppState.mission3BattlesClaimed = true;
+    addHistoryItem('3 Battles Mission Bonus', '+20', true);
+    saveStateToStorage();
+    renderAllViews();
+    showToast('🎉 Bonus +20 Coins Claimed!');
+}
+
+function renderBattleMissions() {
+    const bar = document.getElementById('mission-3battles-bar');
+    const text = document.getElementById('mission-3battles-text');
+    const status = document.getElementById('mission-3battles-status');
+    const btn = document.getElementById('btn-claim-mission-3');
+
+    if (!bar) return;
+
+    const count = AppState.battlesPlayedToday || 0;
+    const pct = Math.min(100, Math.round((count / 3) * 100));
+    bar.style.width = pct + '%';
+    if (text) text.textContent = `${Math.min(3, count)} / 3 Battles`;
+
+    if (AppState.mission3BattlesClaimed) {
+        if (status) { status.textContent = 'Claimed ✔'; status.style.color = '#2ecc71'; }
+        if (btn) { btn.textContent = 'Claimed ✔'; btn.disabled = true; }
+    } else if (count >= 3) {
+        if (status) { status.textContent = 'Ready to Claim! 🎁'; status.style.color = '#ffc107'; }
+        if (btn) { btn.textContent = 'Claim +20 Coins'; btn.disabled = false; }
+    } else {
+        if (status) { status.textContent = 'In Progress'; status.style.color = '#ffc107'; }
+        if (btn) { btn.textContent = 'Claim +20 Coins'; btn.disabled = true; }
+    }
+}
+
+function renderLeaderboard(customList = null) {
+    const listEl = document.getElementById('battle-leaderboard-list');
+    if (!listEl) return;
+
+    const renderList = (data) => {
+        listEl.innerHTML = '';
+        if (!data || data.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center; color: var(--text-muted); font-size: 13px; padding: 16px;">No battle rankings yet</div>';
+            return;
+        }
+
+        data.forEach((player, index) => {
+            const rank = index + 1;
+            let rankClass = '';
+            let rankIcon = `#${rank}`;
+            if (rank === 1) { rankClass = 'rank-gold'; rankIcon = '🥇 1'; }
+            else if (rank === 2) { rankClass = 'rank-silver'; rankIcon = '🥈 2'; }
+            else if (rank === 3) { rankClass = 'rank-bronze'; rankIcon = '🥉 3'; }
+
+            const isUser = AppState.user && player.email === AppState.user.email;
+
+            const div = document.createElement('div');
+            div.className = 'leaderboard-item' + (isUser ? ' user-self' : '');
+            div.innerHTML = `
+                <div class="leaderboard-rank ${rankClass}">${rankIcon}</div>
+                <div class="leaderboard-user-info">
+                    <div class="leaderboard-name">${player.name || 'Player'} ${isUser ? '(You)' : ''}</div>
+                    <div class="leaderboard-stats">${player.battlesWon || 0} Wins | ${player.coinsEarned || 0} Coins</div>
+                </div>
+            `;
+            listEl.appendChild(div);
+        });
+    };
+
+    if (customList) {
+        renderList(customList);
+    } else if (typeof DatabaseAPI !== 'undefined') {
+        DatabaseAPI.listenLeaderboard((list) => {
+            renderList(list);
+        });
+    }
 }

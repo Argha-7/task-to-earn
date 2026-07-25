@@ -329,5 +329,60 @@ const DatabaseAPI = {
             const list = JSON.parse(localStorage.getItem('rewardzoo_task_logs') || '[]');
             if (callback) callback(list);
         }
+    },
+
+    // Battle Stats & Live Leaderboard
+    saveBattleStats: function(userEmail, statsObj, callback) {
+        if (isFirebaseConnected && db && userEmail) {
+            const safeKey = userEmail.replace(/[.#$\[\]]/g, "_");
+            db.ref('leaderboard/' + safeKey).set({
+                email: userEmail,
+                name: statsObj.name || userEmail.split('@')[0],
+                battlesWon: statsObj.battlesWon || 0,
+                battlesPlayed: statsObj.battlesPlayed || 0,
+                coinsEarned: statsObj.coinsEarned || 0,
+                updatedAt: Date.now()
+            }).then(() => {
+                if (callback) callback(true);
+            });
+        } else {
+            let leaderboard = JSON.parse(localStorage.getItem('todoearn_leaderboard') || '[]');
+            const idx = leaderboard.findIndex(u => u.email === userEmail);
+            const userEntry = {
+                email: userEmail,
+                name: statsObj.name || userEmail.split('@')[0],
+                battlesWon: statsObj.battlesWon || 0,
+                battlesPlayed: statsObj.battlesPlayed || 0,
+                coinsEarned: statsObj.coinsEarned || 0,
+                updatedAt: Date.now()
+            };
+            if (idx !== -1) leaderboard[idx] = userEntry;
+            else leaderboard.push(userEntry);
+            localStorage.setItem('todoearn_leaderboard', JSON.stringify(leaderboard));
+            if (callback) callback(true);
+        }
+    },
+
+    listenLeaderboard: function(callback) {
+        if (isFirebaseConnected && db) {
+            db.ref('leaderboard').on('value', (snapshot) => {
+                const data = snapshot.val();
+                let list = data ? Object.values(data) : [];
+                list.sort((a, b) => (b.battlesWon || 0) - (a.battlesWon || 0) || (b.coinsEarned || 0) - (a.coinsEarned || 0));
+                if (callback) callback(list);
+            });
+        } else {
+            let list = JSON.parse(localStorage.getItem('todoearn_leaderboard') || '[]');
+            if (list.length === 0) {
+                list = [
+                    { name: 'ProGamer99', battlesWon: 42, coinsEarned: 2100 },
+                    { name: 'CryptoKing', battlesWon: 28, coinsEarned: 1400 },
+                    { name: 'DSTechVerse', battlesWon: 15, coinsEarned: 750 },
+                    { name: 'StarPlayer', battlesWon: 9, coinsEarned: 450 }
+                ];
+            }
+            list.sort((a, b) => (b.battlesWon || 0) - (a.battlesWon || 0) || (b.coinsEarned || 0) - (a.coinsEarned || 0));
+            if (callback) callback(list);
+        }
     }
 };
