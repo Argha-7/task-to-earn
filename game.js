@@ -119,6 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initTelegramUser();
     setupEventListeners();
     setupStorageSyncListener();
+
+    // Ensure main interface header & bottom navigation bar are always visible
+    showMainInterface();
     renderAllViews();
 
     // Splash Screen Transition
@@ -126,13 +129,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const splash = document.getElementById('splash-screen');
         if (splash) splash.classList.remove('active');
         
-        if (AppState.user) {
-            showMainInterface();
-            navigateToTab('home-screen');
-        } else {
-            showAuthView('login-screen');
-        }
-    }, 2000);
+        showMainInterface();
+        navigateToTab('home-screen');
+    }, 1500);
 });
 
 // Real-Time Cross Window & Firebase Synchronization Listener

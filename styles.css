@@ -1035,7 +1035,7 @@ body {
     justify-content: space-between;
     padding-left: 10px;
     padding-right: 10px;
-    z-index: 150;
+    z-index: 999;
 }
 
 .nav-item {
