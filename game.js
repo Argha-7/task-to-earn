@@ -125,12 +125,10 @@ function initApp() {
         console.error("App Initialization non-fatal notice:", e);
     }
 
-    const header = document.getElementById('main-app-header');
-    const nav = document.getElementById('main-bottom-nav');
-    if (header) header.style.display = 'none';
-    if (nav) nav.style.display = 'none';
+    // Ensure Header & Bottom Navigation Bar are always active & visible
+    showMainInterface();
 
-    // Instant Fail-Safe Splash Dismissal (200ms)
+    // Instant Fail-Safe Splash Dismissal (150ms)
     setTimeout(() => {
         const splash = document.getElementById('splash-screen');
         if (splash) {
@@ -139,7 +137,7 @@ function initApp() {
         }
         showMainInterface();
         navigateToTab('home-screen');
-    }, 200);
+    }, 150);
 }
 
 if (document.readyState === 'loading') {
