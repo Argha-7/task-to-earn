@@ -1420,12 +1420,348 @@ function checkTTTWin(player) {
     return winCombos.some(combo => combo.every(idx => tttBoard[idx] === player));
 }
 
+// Proper Interactive 2D Carrom Physics Engine
+let carromState = {
+    canvas: null,
+    ctx: null,
+    width: 320,
+    height: 320,
+    striker: { x: 160, y: 260, vx: 0, vy: 0, r: 12, isMoving: false },
+    pieces: [],
+    pockets: [
+        { x: 25, y: 25, r: 16 },
+        { x: 295, y: 25, r: 16 },
+        { x: 25, y: 295, r: 16 },
+        { x: 295, y: 295, r: 16 }
+    ],
+    playerScore: 0,
+    botScore: 0,
+    targetScore: 3,
+    isPlayerTurn: true,
+    aimAngle: -Math.PI / 2,
+    gameActive: false,
+    animFrame: null
+};
+
 function startCarromBattleGame() {
-    showToast('⚔️ Carrom Battle Match Started!');
-    setTimeout(() => {
-        const win = Math.random() > 0.35; // 65% win rate for engaging gameplay
-        completeBattleResult(win);
-    }, 2000);
+    audio.playClick();
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const carromScreen = document.getElementById('carrom-game-screen');
+    if (carromScreen) carromScreen.classList.add('active');
+
+    initCarromBoard();
+}
+
+function initCarromBoard() {
+    const canvas = document.getElementById('carromCanvas');
+    if (!canvas) return;
+
+    carromState.canvas = canvas;
+    carromState.ctx = canvas.getContext('2d');
+    carromState.playerScore = 0;
+    carromState.botScore = 0;
+    carromState.isPlayerTurn = true;
+    carromState.gameActive = true;
+    carromState.aimAngle = -Math.PI / 2;
+
+    const scoreEl = document.getElementById('carrom-score');
+    if (scoreEl) scoreEl.textContent = '0';
+    const statusEl = document.getElementById('carrom-turn-status');
+    if (statusEl) {
+        statusEl.textContent = 'Your Turn (White Pieces)';
+        statusEl.style.color = 'var(--accent-magenta)';
+    }
+
+    const cx = 160, cy = 140;
+    carromState.pieces = [
+        // Red Queen Piece
+        { x: cx, y: cy, vx: 0, vy: 0, r: 10, color: '#e74c3c', type: 'red', val: 3 },
+        // White Pieces (Player Target)
+        { x: cx - 18, y: cy, vx: 0, vy: 0, r: 9, color: '#ffffff', type: 'white', val: 1 },
+        { x: cx + 18, y: cy, vx: 0, vy: 0, r: 9, color: '#ffffff', type: 'white', val: 1 },
+        { x: cx, y: cy - 18, vx: 0, vy: 0, r: 9, color: '#ffffff', type: 'white', val: 1 },
+        { x: cx, y: cy + 18, vx: 0, vy: 0, r: 9, color: '#ffffff', type: 'white', val: 1 },
+        // Black Pieces (Opponent/Bot Target)
+        { x: cx - 13, y: cy - 13, vx: 0, vy: 0, r: 9, color: '#2c3e50', type: 'black', val: 1 },
+        { x: cx + 13, y: cy + 13, vx: 0, vy: 0, r: 9, color: '#2c3e50', type: 'black', val: 1 },
+        { x: cx + 13, y: cy - 13, vx: 0, vy: 0, r: 9, color: '#2c3e50', type: 'black', val: 1 },
+        { x: cx - 13, y: cy + 13, vx: 0, vy: 0, r: 9, color: '#2c3e50', type: 'black', val: 1 }
+    ];
+
+    resetStrikerPosition();
+    setupCarromCanvasEvents();
+    drawCarromFrame();
+}
+
+function resetStrikerPosition() {
+    const posSlider = document.getElementById('carrom-slider-pos');
+    const posX = posSlider ? parseInt(posSlider.value, 10) : 160;
+    carromState.striker = {
+        x: posX,
+        y: 260,
+        vx: 0,
+        vy: 0,
+        r: 12,
+        isMoving: false
+    };
+}
+
+function updateStrikerSliderPos(val) {
+    if (carromState.striker.isMoving) return;
+    carromState.striker.x = parseInt(val, 10);
+    drawCarromFrame();
+}
+
+function setupCarromCanvasEvents() {
+    const canvas = carromState.canvas;
+    if (!canvas || canvas.dataset.hasListeners) return;
+
+    canvas.dataset.hasListeners = 'true';
+
+    const handlePointerMove = (e) => {
+        if (!carromState.gameActive || carromState.striker.isMoving) return;
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : null);
+        const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : null);
+
+        if (clientX !== null && clientY !== null) {
+            const touchX = (clientX - rect.left) * (320 / rect.width);
+            const touchY = (clientY - rect.top) * (320 / rect.height);
+
+            carromState.aimAngle = Math.atan2(touchY - carromState.striker.y, touchX - carromState.striker.x);
+            drawCarromFrame();
+        }
+    };
+
+    canvas.addEventListener('mousemove', handlePointerMove);
+    canvas.addEventListener('touchmove', handlePointerMove, { passive: true });
+}
+
+function drawCarromFrame() {
+    const ctx = carromState.ctx;
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, 320, 320);
+
+    // 1. Board Outer Wooden Frame
+    ctx.fillStyle = '#3a2512';
+    ctx.fillRect(0, 0, 320, 320);
+
+    // Inner Playing Board Field
+    ctx.fillStyle = '#221509';
+    ctx.fillRect(15, 15, 290, 290);
+    ctx.strokeStyle = '#5a3d1e';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(15, 15, 290, 290);
+
+    // 2. Draw 4 Corner Pockets
+    carromState.pockets.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = '#080503';
+        ctx.fill();
+        ctx.strokeStyle = '#7a542b';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+    });
+
+    // 3. Center Circles & Baselines
+    ctx.beginPath();
+    ctx.arc(160, 140, 32, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(160, 140, 8, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(231, 76, 60, 0.35)';
+    ctx.fill();
+
+    // Baseline Line
+    ctx.beginPath();
+    ctx.moveTo(40, 260);
+    ctx.lineTo(280, 260);
+    ctx.strokeStyle = 'rgba(224, 59, 255, 0.35)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // 4. Draw Carrom Pieces
+    carromState.pieces.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        ctx.strokeStyle = '#111111';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    });
+
+    // 5. Draw Striker
+    const s = carromState.striker;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffc107'; // Golden Striker
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Aim Line
+    if (!s.isMoving && carromState.gameActive) {
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y);
+        const aimLen = 42;
+        ctx.lineTo(s.x + Math.cos(carromState.aimAngle) * aimLen, s.y + Math.sin(carromState.aimAngle) * aimLen);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+}
+
+function shootCarromStriker() {
+    if (!carromState.gameActive || carromState.striker.isMoving) return;
+
+    audio.playClick();
+    const powerSlider = document.getElementById('carrom-slider-power');
+    const power = powerSlider ? parseInt(powerSlider.value, 10) : 15;
+
+    carromState.striker.vx = Math.cos(carromState.aimAngle) * power;
+    carromState.striker.vy = Math.sin(carromState.aimAngle) * power;
+    carromState.striker.isMoving = true;
+
+    runCarromPhysicsLoop();
+}
+
+function runCarromPhysicsLoop() {
+    cancelAnimationFrame(carromState.animFrame);
+
+    let isMoving = false;
+
+    // Striker Physics & Border Bounce
+    const s = carromState.striker;
+    if (Math.abs(s.vx) > 0.08 || Math.abs(s.vy) > 0.08) {
+        isMoving = true;
+        s.x += s.vx;
+        s.y += s.vy;
+        s.vx *= 0.97;
+        s.vy *= 0.97;
+
+        if (s.x - s.r < 18) { s.x = 18 + s.r; s.vx *= -0.85; }
+        if (s.x + s.r > 302) { s.x = 302 - s.r; s.vx *= -0.85; }
+        if (s.y - s.r < 18) { s.y = 18 + s.r; s.vy *= -0.85; }
+        if (s.y + s.r > 302) { s.y = 302 - s.r; s.vy *= -0.85; }
+
+        carromState.pockets.forEach(p => {
+            const dist = Math.hypot(s.x - p.x, s.y - p.y);
+            if (dist < p.r) {
+                s.vx = 0; s.vy = 0;
+                resetStrikerPosition();
+                audio.triggerHaptic('error');
+                showToast('Foul! Striker pocketed!');
+            }
+        });
+    } else {
+        s.vx = 0; s.vy = 0;
+        s.isMoving = false;
+    }
+
+    // Pieces Physics & Collision Response
+    for (let i = carromState.pieces.length - 1; i >= 0; i--) {
+        const p = carromState.pieces[i];
+        if (Math.abs(p.vx) > 0.08 || Math.abs(p.vy) > 0.08) {
+            isMoving = true;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vx *= 0.97;
+            p.vy *= 0.97;
+
+            if (p.x - p.r < 18) { p.x = 18 + p.r; p.vx *= -0.85; }
+            if (p.x + p.r > 302) { p.x = 302 - p.r; p.vx *= -0.85; }
+            if (p.y - p.r < 18) { p.y = 18 + p.r; p.vy *= -0.85; }
+            if (p.y + p.r > 302) { p.y = 302 - p.r; p.vy *= -0.85; }
+
+            // Pocketing Logic
+            let pocketed = false;
+            carromState.pockets.forEach(pkt => {
+                const dist = Math.hypot(p.x - pkt.x, p.y - pkt.y);
+                if (dist < pkt.r + 2) {
+                    pocketed = true;
+                    audio.playCoin();
+                    if (p.type === 'white' || p.type === 'red') {
+                        carromState.playerScore += p.val;
+                        const scoreEl = document.getElementById('carrom-score');
+                        if (scoreEl) scoreEl.textContent = carromState.playerScore;
+                        showToast(`🎉 Pocketed ${p.type.toUpperCase()} piece! +${p.val} Score`);
+                    } else {
+                        carromState.botScore += p.val;
+                        showToast('Black piece pocketed for Bot!');
+                    }
+                }
+            });
+
+            if (pocketed) {
+                carromState.pieces.splice(i, 1);
+                continue;
+            }
+        }
+
+        // Collision: Striker <-> Piece
+        const dx = p.x - s.x;
+        const dy = p.y - s.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < s.r + p.r) {
+            const angle = Math.atan2(dy, dx);
+            const speed = Math.hypot(s.vx, s.vy);
+            p.vx = Math.cos(angle) * speed * 0.85;
+            p.vy = Math.sin(angle) * speed * 0.85;
+            s.vx *= -0.4;
+            s.vy *= -0.4;
+            audio.playClick();
+        }
+    }
+
+    // Collision: Piece <-> Piece
+    for (let i = 0; i < carromState.pieces.length; i++) {
+        for (let j = i + 1; j < carromState.pieces.length; j++) {
+            const p1 = carromState.pieces[i];
+            const p2 = carromState.pieces[j];
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < p1.r + p2.r) {
+                const angle = Math.atan2(dy, dx);
+                const p1Speed = Math.hypot(p1.vx, p1.vy);
+                p2.vx = Math.cos(angle) * p1Speed * 0.75;
+                p2.vy = Math.sin(angle) * p1Speed * 0.75;
+                p1.vx *= -0.5;
+                p1.vy *= -0.5;
+            }
+        }
+    }
+
+    drawCarromFrame();
+
+    if (isMoving) {
+        carromState.animFrame = requestAnimationFrame(runCarromPhysicsLoop);
+    } else {
+        checkCarromWinCondition();
+    }
+}
+
+function checkCarromWinCondition() {
+    if (carromState.playerScore >= carromState.targetScore) {
+        carromState.gameActive = false;
+        showToast('🎉 Carrom Victory! Reached Target Score!');
+        setTimeout(() => completeBattleResult(true), 1200);
+    } else if (carromState.pieces.filter(p => p.type === 'white' || p.type === 'red').length === 0) {
+        carromState.gameActive = false;
+        completeBattleResult(carromState.playerScore > carromState.botScore);
+    } else {
+        resetStrikerPosition();
+        drawCarromFrame();
+    }
 }
 
 function startSpinBattleGame() {

@@ -479,24 +479,36 @@
              ========================================== -->
         <div id="carrom-game-screen" class="screen">
             <div class="subpage-top-bar">
-                <button class="btn-back" onclick="navigateToTab('home-screen')"><i class="fa-solid fa-arrow-left"></i> Exit Carrom</button>
+                <button class="btn-back" onclick="navigateToTab('battle-screen')"><i class="fa-solid fa-arrow-left"></i> Exit Carrom</button>
             </div>
-            <div class="game-container-card" style="padding: 16px;">
+            <div class="game-container-card" style="padding: 16px; text-align: center;">
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:12px;">
                     <div>
-                        <h2 style="font-size:18px;">Carrom Battle</h2>
-                        <span style="font-size:12px; color:var(--text-muted);">Pocket 3 coins to Win +50 Coins!</span>
+                        <h2 style="font-size:18px; font-weight: 900;">⚔️ Carrom Battle Arena</h2>
+                        <span id="carrom-turn-status" style="font-size:12px; color:var(--accent-magenta); font-weight: 700;">Your Turn (White Pieces)</span>
                     </div>
-                    <div style="background:rgba(255,193,7,0.15); color:var(--coin-gold); padding:6px 12px; border-radius:12px; font-weight:800; font-size:14px;">
-                        Score: <span id="carrom-score">0</span>/3
+                    <div style="background:rgba(255,193,7,0.15); color:var(--coin-gold); padding:6px 14px; border-radius:12px; font-weight:800; font-size:13px;">
+                        Score: <span id="carrom-score">0</span> / 3
                     </div>
                 </div>
 
-                <canvas id="carromCanvas" width="300" height="300" style="background:#2a1b0c; border:6px solid #5a3d1e; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.8); cursor:crosshair; touch-action:none;"></canvas>
+                <!-- Canvas Wooden Board -->
+                <canvas id="carromCanvas" width="320" height="320" style="background:#2a1b0c; border:8px solid #5a3d1e; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.9); cursor:crosshair; touch-action:none; margin: 0 auto;"></canvas>
 
-                <div style="margin-top:14px; width:100%; text-align:center;">
-                    <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Drag Striker to Aim & Release to Shoot!</div>
-                    <button class="btn btn-primary" id="btn-carrom-reset" onclick="initCarromBoard()">Reset Board</button>
+                <!-- Striker Aim & Power Controls -->
+                <div style="margin-top:14px; width:100%; max-width:320px; margin-left:auto; margin-right:auto;">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">
+                        <span>Position Striker</span>
+                        <span>Power</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
+                        <input type="range" id="carrom-slider-pos" min="40" max="280" value="160" oninput="updateStrikerSliderPos(this.value)" style="flex: 1; accent-color: var(--accent-magenta);">
+                        <input type="range" id="carrom-slider-power" min="6" max="24" value="15" style="width: 80px; accent-color: #ff9f43;">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary" id="btn-carrom-shoot" onclick="shootCarromStriker()">⚡ STRIKE!</button>
+                        <button class="btn" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; width: auto; padding: 0 16px;" onclick="initCarromBoard()">Reset</button>
+                    </div>
                 </div>
             </div>
         </div>
