@@ -1345,6 +1345,7 @@ let carromState = {
     botScore: 0,
     targetScore: 3,
     isPlayerTurn: true,
+    lastTurnScored: false,
     aimAngle: -Math.PI / 2,
     gameActive: false,
     animFrame: null
@@ -1369,6 +1370,7 @@ function initCarromBoard() {
     carromState.playerScore = 0;
     carromState.botScore = 0;
     carromState.isPlayerTurn = true;
+    carromState.lastTurnScored = false;
     carromState.gameActive = true;
     carromState.aimAngle = -Math.PI / 2;
 
@@ -1380,8 +1382,8 @@ function initCarromBoard() {
     const statusEl = document.getElementById('carrom-turn-status');
     if (statusEl) {
         statusEl.textContent = '🎯 YOUR TURN';
-        statusEl.style.color = 'var(--accent-magenta)';
-        statusEl.style.background = 'rgba(224,59,255,0.2)';
+        statusEl.style.color = '#ffffff';
+        statusEl.style.background = 'rgba(224,59,255,0.3)';
     }
 
     const cx = 160, cy = 140;
@@ -1681,6 +1683,7 @@ function shootCarromStriker() {
     carromState.gameActive = true;
     if (carromState.striker.isMoving) return;
 
+    carromState.lastTurnScored = false; // Reset turn scored flag on new shot!
     audio.playClick();
     const powerSlider = document.getElementById('carrom-slider-power');
     const power = powerSlider ? parseInt(powerSlider.value, 10) : 16;
@@ -1701,7 +1704,7 @@ function runCarromPhysicsLoop() {
 
     let isMoving = false;
 
-    // Striker Physics & Border Bounce
+    // 1. Striker Physics & Border Bounce
     const s = carromState.striker;
     if (Math.abs(s.vx) > 0.08 || Math.abs(s.vy) > 0.08) {
         isMoving = true;
@@ -1754,11 +1757,13 @@ function runCarromPhysicsLoop() {
                     audio.playCoin();
                     if (p.type === 'white' || p.type === 'red') {
                         carromState.playerScore += p.val;
+                        if (carromState.isPlayerTurn) carromState.lastTurnScored = true;
                         const pScoreEl = document.getElementById('carrom-player-score');
                         if (pScoreEl) pScoreEl.textContent = carromState.playerScore;
                         showToast(`🎉 Pocketed ${p.type.toUpperCase()} piece! +${p.val} Score`);
                     } else {
                         carromState.botScore += p.val;
+                        if (!carromState.isPlayerTurn) carromState.lastTurnScored = true;
                         const bScoreEl = document.getElementById('carrom-bot-score');
                         if (bScoreEl) bScoreEl.textContent = carromState.botScore;
                         showToast('Black piece pocketed for Bot!');
@@ -1804,7 +1809,7 @@ function runCarromPhysicsLoop() {
         }
     });
 
-    // Collision: Piece <-> Piece
+    // 4. Collision Check: Piece <-> Piece
     for (let i = 0; i < carromState.pieces.length; i++) {
         for (let j = i + 1; j < carromState.pieces.length; j++) {
             const p1 = carromState.pieces[i];
@@ -1812,13 +1817,25 @@ function runCarromPhysicsLoop() {
             const dx = p2.x - p1.x;
             const dy = p2.y - p1.y;
             const dist = Math.hypot(dx, dy);
-            if (dist < p1.r + p2.r) {
+            const minDist = p1.r + p2.r;
+
+            if (dist < minDist && dist > 0) {
+                isMoving = true;
                 const angle = Math.atan2(dy, dx);
                 const p1Speed = Math.hypot(p1.vx, p1.vy);
-                p2.vx = Math.cos(angle) * p1Speed * 0.75;
-                p2.vy = Math.sin(angle) * p1Speed * 0.75;
-                p1.vx *= -0.5;
-                p1.vy *= -0.5;
+                const p2Speed = Math.hypot(p2.vx, p2.vy);
+                const maxSpeed = Math.max(p1Speed, p2Speed, 6);
+
+                p2.vx = Math.cos(angle) * maxSpeed * 0.75;
+                p2.vy = Math.sin(angle) * maxSpeed * 0.75;
+                p1.vx = -Math.cos(angle) * maxSpeed * 0.4;
+                p1.vy = -Math.sin(angle) * maxSpeed * 0.4;
+
+                const overlap = minDist - dist;
+                p2.x += Math.cos(angle) * overlap * 0.5;
+                p2.y += Math.sin(angle) * overlap * 0.5;
+                p1.x -= Math.cos(angle) * overlap * 0.5;
+                p1.y -= Math.sin(angle) * overlap * 0.5;
             }
         }
     }
@@ -1850,15 +1867,28 @@ function checkCarromWinCondition() {
         resetStrikerPosition();
         drawCarromFrame();
 
-        // If player shot was completed and no piece was pocketed on player turn, trigger Bot turn
-        if (carromState.isPlayerTurn && !carromState.lastTurnScored) {
-            triggerCarromBotShot();
+        // If player scored, give Extra Turn! Otherwise trigger Bot turn
+        if (carromState.isPlayerTurn) {
+            if (carromState.lastTurnScored) {
+                const turnEl = document.getElementById('carrom-turn-status');
+                if (turnEl) {
+                    turnEl.textContent = '🔥 EXTRA TURN!';
+                    turnEl.style.color = '#00d2d3';
+                }
+            } else {
+                triggerCarromBotShot();
+            }
         } else {
-            carromState.isPlayerTurn = true;
-            const turnEl = document.getElementById('carrom-turn-status');
-            if (turnEl) {
-                turnEl.textContent = 'Your Turn (White Pieces)';
-                turnEl.style.color = 'var(--accent-magenta)';
+            if (carromState.lastTurnScored) {
+                triggerCarromBotShot(); // Bot scored, bot gets another turn!
+            } else {
+                carromState.isPlayerTurn = true;
+                const turnEl = document.getElementById('carrom-turn-status');
+                if (turnEl) {
+                    turnEl.textContent = '🎯 YOUR TURN';
+                    turnEl.style.color = '#ffffff';
+                    turnEl.style.background = 'rgba(224,59,255,0.3)';
+                }
             }
         }
     }
@@ -1868,10 +1898,13 @@ function triggerCarromBotShot() {
     if (!carromState.gameActive || carromState.striker.isMoving) return;
 
     carromState.isPlayerTurn = false;
+    carromState.lastTurnScored = false;
+
     const turnEl = document.getElementById('carrom-turn-status');
     if (turnEl) {
-        turnEl.textContent = '🤖 Bot Thinking & Aiming...';
-        turnEl.style.color = 'var(--warning-yellow)';
+        turnEl.textContent = '🤖 BOT THINKING...';
+        turnEl.style.color = '#ff9f43';
+        turnEl.style.background = 'rgba(255,159,67,0.2)';
     }
 
     setTimeout(() => {
@@ -1883,7 +1916,7 @@ function triggerCarromBotShot() {
         if (target) {
             const angle = Math.atan2(target.y - carromState.striker.y, target.x - carromState.striker.x);
             carromState.aimAngle = angle;
-            const power = Math.floor(11 + Math.random() * 8);
+            const power = Math.floor(12 + Math.random() * 8);
 
             carromState.striker.vx = Math.cos(angle) * power;
             carromState.striker.vy = Math.sin(angle) * power;
