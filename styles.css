@@ -162,6 +162,21 @@ body {
     display: flex;
 }
 
+#carrom-game-screen {
+    overflow: hidden !important;
+    touch-action: none !important;
+    padding-bottom: 20px !important;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#carromCanvas {
+    touch-action: none !important;
+    user-select: none;
+    -webkit-user-select: none;
+    max-width: 100%;
+}
+
 @keyframes slideUpFade {
     from { opacity: 0; transform: translateY(12px) scale(0.98); }
     to { opacity: 1; transform: translateY(0) scale(1); }

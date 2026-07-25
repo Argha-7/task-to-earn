@@ -1454,6 +1454,7 @@ function setupCarromCanvasEvents() {
     }
 
     const startAim = (e) => {
+        if (e.cancelable) e.preventDefault();
         if (!carromState.gameActive || carromState.striker.isMoving || !carromState.isPlayerTurn) return;
         const pos = getCanvasCoords(e);
         if (!pos) return;
@@ -1469,6 +1470,7 @@ function setupCarromCanvasEvents() {
     };
 
     const moveAim = (e) => {
+        if (e.cancelable) e.preventDefault();
         if (!isDraggingStriker || carromState.striker.isMoving) return;
         const pos = getCanvasCoords(e);
         if (!pos) return;
@@ -1489,7 +1491,7 @@ function setupCarromCanvasEvents() {
         drawCarromFrame();
     };
 
-    const endAim = () => {
+    const endAim = (e) => {
         if (isDraggingStriker && !carromState.striker.isMoving) {
             isDraggingStriker = false;
             const pullDist = Math.hypot(dragTouchPos.x - carromState.striker.x, dragTouchPos.y - carromState.striker.y);
@@ -1503,8 +1505,8 @@ function setupCarromCanvasEvents() {
     canvas.addEventListener('mousemove', moveAim);
     window.addEventListener('mouseup', endAim);
 
-    canvas.addEventListener('touchstart', startAim, { passive: true });
-    canvas.addEventListener('touchmove', moveAim, { passive: true });
+    canvas.addEventListener('touchstart', startAim, { passive: false });
+    canvas.addEventListener('touchmove', moveAim, { passive: false });
     window.addEventListener('touchend', endAim);
 }
 
